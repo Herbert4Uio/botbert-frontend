@@ -43,7 +43,8 @@ export function SettingsPage() {
     fetchStatus();
     fetchTenantConfig();
 
-    const socketInstance = io(import.meta.env.VITE_API_URL || 'http://localhost:3000/whatsapp', {
+    const apiUrl = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/whatsapp` : 'http://localhost:3000/whatsapp';
+    const socketInstance = io(apiUrl, {
       query: { tenantId: user.tenantId }
     });
 
