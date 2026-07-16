@@ -11,7 +11,7 @@ interface Message {
 
 interface Conversation {
   _id: string;
-  customerId: { _id: string; profileName: string; whatsappId: string; };
+  customerId: { _id: string; profileName: string; whatsappId: string; phoneNumber?: string; };
   branchId: { _id: string; name: string; };
   messages: Message[];
   status: string;
@@ -132,7 +132,7 @@ export function ChatsPage() {
                   {selectedChat.customerId?.profileName || 'Cliente'}
                 </h3>
                 <p className="text-xs text-corporate-500">
-                  +{selectedChat.customerId?.whatsappId?.split('@')[0]}
+                  +{selectedChat.customerId?.phoneNumber || selectedChat.customerId?.whatsappId?.split('@')[0]?.split(':')[0]}
                 </p>
               </div>
               

@@ -16,6 +16,7 @@ interface Customer {
   profileName: string;
   fullName?: string;
   whatsappId: string;
+  phoneNumber?: string;
   address?: string;
 }
 
@@ -146,6 +147,7 @@ export function OrdersPage() {
 
   const getCustomerPhone = (customer: Customer | string) => {
     if (typeof customer === 'string') return '';
+    if (customer.phoneNumber) return customer.phoneNumber;
     // Fix para números de Baileys que vienen con :device@s.whatsapp.net
     const jid = customer.whatsappId || '';
     const numberOnly = jid.split('@')[0].split(':')[0];

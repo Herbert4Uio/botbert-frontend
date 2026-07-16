@@ -24,6 +24,7 @@ interface Product {
   description: string;
   weight?: string;
   keywords: string[];
+  occasions?: string[];
   isActive: boolean;
   categoryId: string;
 }
@@ -46,6 +47,7 @@ export function CatalogPage() {
   const [formDescription, setFormDescription] = useState('');
   const [formWeight, setFormWeight] = useState('');
   const [formKeywords, setFormKeywords] = useState('');
+  const [formOccasions, setFormOccasions] = useState('');
   const [formIsActive, setFormIsActive] = useState(true);
 
   // Filter State
@@ -100,6 +102,7 @@ export function CatalogPage() {
         description: formDescription,
         weight: formWeight,
         keywords: formKeywords.split(',').map(k => k.trim()).filter(Boolean),
+        occasions: formOccasions.split(',').map(o => o.trim()).filter(Boolean),
         isActive: formIsActive,
       };
 
@@ -152,6 +155,7 @@ export function CatalogPage() {
       setFormDescription(prod.description);
       setFormWeight(prod.weight || '');
       setFormKeywords(prod.keywords.join(', '));
+      setFormOccasions(prod.occasions ? prod.occasions.join(', ') : '');
       setFormIsActive(prod.isActive);
     } else {
       setEditingProduct(null);
@@ -163,6 +167,7 @@ export function CatalogPage() {
       setFormDescription('');
       setFormWeight('');
       setFormKeywords('');
+      setFormOccasions('');
       setFormIsActive(true);
     }
     setModalOpen(true);
@@ -414,6 +419,15 @@ export function CatalogPage() {
                     className="w-full px-4 py-2 border border-corporate-200 rounded-lg focus:ring-2 focus:ring-accent outline-none"
                   />
                   <p className="text-xs text-corporate-400 mt-1">Ayuda a la Inteligencia Artificial a encontrar el producto más rápido.</p>
+                </div>
+
+                <div className="col-span-2">
+                  <label className="block text-sm font-medium text-corporate-700 mb-1">Ocasiones (Separadas por comas)</label>
+                  <input
+                    type="text" value={formOccasions} onChange={(e) => setFormOccasions(e.target.value)} placeholder="Regalo, Aniversario, Día de la Madre"
+                    className="w-full px-4 py-2 border border-corporate-200 rounded-lg focus:ring-2 focus:ring-accent outline-none"
+                  />
+                  <p className="text-xs text-corporate-400 mt-1">Etiquetas exactas para que la IA sepa en qué eventos recomendar este producto.</p>
                 </div>
 
                 <div className="col-span-2 flex items-center gap-2 mt-2">
