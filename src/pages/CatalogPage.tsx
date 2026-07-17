@@ -52,6 +52,9 @@ export function CatalogPage() {
 
   // Filter State
   const [selectedCityId, setSelectedCityId] = useState<string>('');
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
+  const [searchKeyword, setSearchKeyword] = useState<string>('');
+  const [searchOccasion, setSearchOccasion] = useState<string>('');
 
   const { addToast } = useToastStore();
   const [modalConfig, setModalConfig] = useState<{
@@ -179,11 +182,36 @@ export function CatalogPage() {
   };
 
   const filteredProducts = products.filter(p => {
-    if (!selectedCityId) return true;
-    return p.prices?.some(pr => {
-      const cId = typeof pr.cityId === 'object' ? pr.cityId._id : pr.cityId;
-      return cId === selectedCityId;
-    });
+    // 1. Filtro de Ciudad
+    if (selectedCityId) {
+      const hasCity = p.prices?.some(pr => {
+        const cId = typeof pr.cityId === 'object' ? pr.cityId._id : pr.cityId;
+        return cId === selectedCityId;
+      });
+      if (!hasCity) return false;
+    }
+
+    // 2. Filtro de Categoría
+    if (selectedCategoryId && p.categoryId !== selectedCategoryId) {
+      return false;
+    }
+
+    // 3. Filtro de Keyword (Búsqueda en keywords o en el nombre)
+    if (searchKeyword.trim() !== '') {
+      const term = searchKeyword.toLowerCase().trim();
+      const matchName = p.name.toLowerCase().includes(term);
+      const matchKeyword = p.keywords?.some(k => k.toLowerCase().includes(term));
+      if (!matchName && !matchKeyword) return false;
+    }
+
+    // 4. Filtro de Ocasión
+    if (searchOccasion.trim() !== '') {
+      const term = searchOccasion.toLowerCase().trim();
+      const matchOccasion = p.occasions?.some(o => o.toLowerCase().includes(term));
+      if (!matchOccasion) return false;
+    }
+
+    return true;
   });
 
   const getPriceLabel = (prod: Product) => {
@@ -208,23 +236,64 @@ export function CatalogPage() {
           <p className="text-corporate-400 text-sm mt-1">El inventario que utiliza la Inteligencia Artificial para vender</p>
         </div>
         <div className="flex items-center gap-4">
-          <select 
-            value={selectedCityId} 
-            onChange={(e) => setSelectedCityId(e.target.value)} 
-            className="px-4 py-2 border border-corporate-200 rounded-lg bg-white outline-none focus:ring-2 focus:ring-accent"
-          >
-            <option value="">Todas las Ciudades</option>
-            {cities.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
-          </select>
           {canEdit && (
             <button 
               onClick={() => openModal()}
-              className="bg-accent hover:bg-accent-hover text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2"
+              className="bg-accent hover:bg-accent-hover text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 shadow-sm"
             >
               <Plus className="w-5 h-5" />
               Nuevo Producto
             </button>
           )}
+        </div>
+      </div>
+
+      {/* Filtros de Búsqueda */}
+      <div className="bg-white p-4 rounded-xl shadow-sm border border-corporate-100 flex flex-wrap gap-4 items-center">
+        <div className="flex-1 min-w-[200px]">
+          <label className="block text-xs font-medium text-corporate-500 mb-1">Ciudad</label>
+          <select 
+            value={selectedCityId} 
+            onChange={(e) => setSelectedCityId(e.target.value)} 
+            className="w-full px-3 py-2 border border-corporate-200 rounded-lg bg-white outline-none focus:ring-2 focus:ring-accent text-sm text-corporate-700"
+          >
+            <option value="">Todas las Ciudades</option>
+            {cities.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
+          </select>
+        </div>
+        
+        <div className="flex-1 min-w-[200px]">
+          <label className="block text-xs font-medium text-corporate-500 mb-1">Categoría</label>
+          <select 
+            value={selectedCategoryId} 
+            onChange={(e) => setSelectedCategoryId(e.target.value)} 
+            className="w-full px-3 py-2 border border-corporate-200 rounded-lg bg-white outline-none focus:ring-2 focus:ring-accent text-sm text-corporate-700"
+          >
+            <option value="">Todas las Categorías</option>
+            {categories.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}
+          </select>
+        </div>
+
+        <div className="flex-1 min-w-[200px]">
+          <label className="block text-xs font-medium text-corporate-500 mb-1">Buscar Producto / Keyword</label>
+          <input 
+            type="text"
+            placeholder="Ej: chocolate, amargo..."
+            value={searchKeyword}
+            onChange={(e) => setSearchKeyword(e.target.value)}
+            className="w-full px-3 py-2 border border-corporate-200 rounded-lg bg-white outline-none focus:ring-2 focus:ring-accent text-sm text-corporate-700"
+          />
+        </div>
+
+        <div className="flex-1 min-w-[200px]">
+          <label className="block text-xs font-medium text-corporate-500 mb-1">Ocasión</label>
+          <input 
+            type="text"
+            placeholder="Ej: regalo, aniversario..."
+            value={searchOccasion}
+            onChange={(e) => setSearchOccasion(e.target.value)}
+            className="w-full px-3 py-2 border border-corporate-200 rounded-lg bg-white outline-none focus:ring-2 focus:ring-accent text-sm text-corporate-700"
+          />
         </div>
       </div>
 
