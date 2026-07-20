@@ -13,6 +13,7 @@ interface Branch {
   whatsappNumber?: string;
   systemPrompt: string;
   isActive: boolean;
+  allowsDelivery?: boolean;
   isBusinessHoursEnabled?: boolean;
   businessHoursStart?: string;
   businessHoursEnd?: string;
@@ -34,6 +35,7 @@ export function BranchesPage() {
   const [formWhatsappNumber, setFormWhatsappNumber] = useState('');
   const [formSystemPrompt, setFormSystemPrompt] = useState('');
   const [formIsActive, setFormIsActive] = useState(true);
+  const [formAllowsDelivery, setFormAllowsDelivery] = useState(true);
   const [formIsBusinessHoursEnabled, setFormIsBusinessHoursEnabled] = useState(false);
   const [formBusinessHoursStart, setFormBusinessHoursStart] = useState('09:00');
   const [formBusinessHoursEnd, setFormBusinessHoursEnd] = useState('18:00');
@@ -85,6 +87,7 @@ export function BranchesPage() {
         whatsappNumber: formWhatsappNumber,
         systemPrompt: formSystemPrompt,
         isActive: formIsActive,
+        allowsDelivery: formAllowsDelivery,
         isBusinessHoursEnabled: formIsBusinessHoursEnabled,
         businessHoursStart: formBusinessHoursStart,
         businessHoursEnd: formBusinessHoursEnd,
@@ -135,6 +138,7 @@ export function BranchesPage() {
       setFormWhatsappNumber(branch.whatsappNumber || '');
       setFormSystemPrompt(branch.systemPrompt || '');
       setFormIsActive(branch.isActive !== false);
+      setFormAllowsDelivery(branch.allowsDelivery !== false);
       setFormIsBusinessHoursEnabled(branch.isBusinessHoursEnabled || false);
       setFormBusinessHoursStart(branch.businessHoursStart || '09:00');
       setFormBusinessHoursEnd(branch.businessHoursEnd || '18:00');
@@ -147,6 +151,7 @@ export function BranchesPage() {
       setFormWhatsappNumber('');
       setFormSystemPrompt('Eres un asistente experto en ventas...');
       setFormIsActive(true);
+      setFormAllowsDelivery(true);
       setFormIsBusinessHoursEnabled(false);
       setFormBusinessHoursStart('09:00');
       setFormBusinessHoursEnd('18:00');
@@ -193,6 +198,7 @@ export function BranchesPage() {
                   <th className="px-6 py-4 font-medium text-corporate-600">Dirección</th>
                   <th className="px-6 py-4 font-medium text-corporate-600">Teléfono (WhatsApp)</th>
                   <th className="px-6 py-4 font-medium text-corporate-600">Estado</th>
+                  <th className="px-6 py-4 font-medium text-corporate-600">Envíos</th>
                   {canEdit && <th className="px-6 py-4 font-medium text-corporate-600 text-right">Acciones</th>}
                 </tr>
               </thead>
@@ -206,6 +212,11 @@ export function BranchesPage() {
                     <td className="px-6 py-4">
                       <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${branch.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                         {branch.isActive ? 'Activa' : 'Inactiva'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${branch.allowsDelivery !== false ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'}`}>
+                        {branch.allowsDelivery !== false ? 'Envío + Recojo' : 'Solo Recojo'}
                       </span>
                     </td>
                     {canEdit && (
@@ -298,6 +309,15 @@ export function BranchesPage() {
                     className="w-4 h-4 text-accent border-corporate-300 rounded focus:ring-accent"
                   />
                   <label htmlFor="isActive" className="text-sm text-corporate-700">Sucursal Activa</label>
+                </div>
+
+                <div className="col-span-2 flex items-center gap-2">
+                  <input
+                    type="checkbox" id="allowsDelivery" checked={formAllowsDelivery} onChange={(e) => setFormAllowsDelivery(e.target.checked)}
+                    className="w-4 h-4 text-accent border-corporate-300 rounded focus:ring-accent"
+                  />
+                  <label htmlFor="allowsDelivery" className="text-sm text-corporate-700">Realiza envíos a domicilio</label>
+                  <span className="text-xs text-corporate-400">(Si está desactivado, solo ofrecerá recojo en sucursal)</span>
                 </div>
 
                 <div className="col-span-2 border-t border-corporate-100 pt-4 mt-2">
