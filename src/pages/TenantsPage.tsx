@@ -17,6 +17,8 @@ export function TenantsPage() {
     name: '',
     plan: 'PREMIUM',
     isActive: true,
+    isProductsModifiable: false,
+    modifiableQuestion: '',
     ownerEmail: '',
     ownerName: '',
     ownerPassword: ''
@@ -53,6 +55,8 @@ export function TenantsPage() {
         name: tenant.name,
         plan: tenant.plan,
         isActive: tenant.isActive,
+        isProductsModifiable: tenant.isProductsModifiable ?? false,
+        modifiableQuestion: tenant.modifiableQuestion ?? '',
         ownerEmail: '',
         ownerName: '',
         ownerPassword: ''
@@ -64,6 +68,8 @@ export function TenantsPage() {
         name: '',
         plan: 'PREMIUM',
         isActive: true,
+        isProductsModifiable: false,
+        modifiableQuestion: '',
         ownerEmail: '',
         ownerName: '',
         ownerPassword: ''
@@ -79,7 +85,9 @@ export function TenantsPage() {
         await api.put(`/tenants/${formData._id}`, {
           name: formData.name,
           plan: formData.plan,
-          isActive: formData.isActive
+          isActive: formData.isActive,
+          isProductsModifiable: formData.isProductsModifiable,
+          modifiableQuestion: formData.modifiableQuestion
         });
         addToast('Empresa actualizada exitosamente', 'success');
       } else {
@@ -240,6 +248,31 @@ export function TenantsPage() {
             />
             <label htmlFor="isActive" className="text-sm font-medium text-corporate-700">Empresa Activa</label>
           </div>
+
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              id="isProductsModifiable"
+              checked={formData.isProductsModifiable}
+              onChange={e => setFormData({...formData, isProductsModifiable: e.target.checked})}
+              className="w-4 h-4 text-accent border-corporate-300 rounded focus:ring-accent"
+            />
+            <label htmlFor="isProductsModifiable" className="text-sm font-medium text-corporate-700">Productos Modificables</label>
+          </div>
+
+          {formData.isProductsModifiable && (
+            <div>
+              <label className="block text-sm font-medium text-corporate-700 mb-1">Pregunta de Personalización</label>
+              <input
+                type="text"
+                value={formData.modifiableQuestion}
+                onChange={e => setFormData({...formData, modifiableQuestion: e.target.value})}
+                className="w-full px-4 py-2 border border-corporate-200 rounded-lg focus:ring-2 focus:ring-accent outline-none"
+                placeholder="Ej: ¿Tenés alguna restricción alimenticia?"
+              />
+              <p className="text-xs text-corporate-400 mt-1">Pregunta que la IA hará al cliente después de elegir un producto.</p>
+            </div>
+          )}
 
           {!isEditing && (
             <div className="mt-6 border-t border-corporate-100 pt-6 space-y-4">

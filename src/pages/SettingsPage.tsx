@@ -1,11 +1,17 @@
 import { useEffect, useState } from 'react';
 import { api } from '../services/api';
 import { useAuthStore } from '../store/authStore';
-import { Settings, QrCode, Smartphone, LogOut, Loader2, Shield, Zap, CreditCard, AlertTriangle, Save, Server, Clock } from 'lucide-react';
+import { Settings, QrCode, Smartphone, LogOut, Loader2, Shield, Zap, CreditCard, AlertTriangle, Save, Server, Clock, HelpCircle, Plus, Trash2, MessageCircle } from 'lucide-react';
 import { useToastStore } from '../store/toastStore';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
 import { io } from 'socket.io-client';
 import { QRCodeSVG } from 'qrcode.react';
+
+interface FaqItem {
+  question: string;
+  answer: string;
+  keywords: string[];
+}
 
 export function SettingsPage() {
   const { user } = useAuthStore();
@@ -22,6 +28,18 @@ export function SettingsPage() {
   const [systemPrompt, setSystemPrompt] = useState<string>('');
   const [useCustomSystemPrompt, setUseCustomSystemPrompt] = useState<boolean>(false);
   const [isSavingMemory, setIsSavingMemory] = useState(false);
+  
+  const [faqs, setFaqs] = useState<FaqItem[]>([]);
+  const [greetingKeywords, setGreetingKeywords] = useState<string[]>([]);
+  const [newKeyword, setNewKeyword] = useState('');
+  const [editingFaqIndex, setEditingFaqIndex] = useState<number | null>(null);
+  const [faqForm, setFaqForm] = useState<FaqItem>({ question: '', answer: '', keywords: [] });
+  const [newFaqKeyword, setNewFaqKeyword] = useState('');
+  const [isProductsModifiable, setIsProductsModifiable] = useState<boolean>(false);
+  const [modifiableQuestion, setModifiableQuestion] = useState<string>('');
+  const [businessDescription, setBusinessDescription] = useState<string>('');
+  const [isGeneratingPrompt, setIsGeneratingPrompt] = useState<boolean>(false);
+  const [showPromptGenerator, setShowPromptGenerator] = useState<boolean>(false);
 
   const { addToast } = useToastStore();
   const [modalConfig, setModalConfig] = useState<{
@@ -89,6 +107,10 @@ export function SettingsPage() {
         setMaxItemsPerOrder(data.maxItemsPerOrder ?? 20);
         setSystemPrompt(data.systemPrompt ?? '');
         setUseCustomSystemPrompt(data.useCustomSystemPrompt ?? false);
+        setFaqs(data.faqs ?? []);
+        setGreetingKeywords(data.greetingKeywords ?? []);
+        setIsProductsModifiable(data.isProductsModifiable ?? false);
+        setModifiableQuestion(data.modifiableQuestion ?? '');
       }
     } catch (error) {
       console.error(error);
@@ -151,7 +173,11 @@ export function SettingsPage() {
             maxOrdersPerDay,
             maxItemsPerOrder,
             systemPrompt,
-            useCustomSystemPrompt
+            useCustomSystemPrompt,
+            faqs,
+            greetingKeywords,
+            isProductsModifiable,
+            modifiableQuestion
           });
           addToast('Configuración actualizada exitosamente', 'success');
           setModalConfig((prev) => ({ ...prev, isOpen: false }));
@@ -163,6 +189,85 @@ export function SettingsPage() {
         }
       }
     );
+  };
+
+  const handleAddKeyword = () => {
+    const trimmed = newKeyword.trim().toLowerCase();
+    if (trimmed && !greetingKeywords.includes(trimmed)) {
+      setGreetingKeywords([...greetingKeywords, trimmed]);
+      setNewKeyword('');
+    }
+  };
+
+  const handleRemoveKeyword = (index: number) => {
+    setGreetingKeywords(greetingKeywords.filter((_, i) => i !== index));
+  };
+
+  const handleSaveFaq = () => {
+    if (!faqForm.question.trim() || !faqForm.answer.trim()) {
+      addToast('La pregunta y respuesta son obligatorias', 'error');
+      return;
+    }
+    if (editingFaqIndex !== null) {
+      const updated = [...faqs];
+      updated[editingFaqIndex] = faqForm;
+      setFaqs(updated);
+    } else {
+      setFaqs([...faqs, faqForm]);
+    }
+    setFaqForm({ question: '', answer: '', keywords: [] });
+    setEditingFaqIndex(null);
+    setNewFaqKeyword('');
+  };
+
+  const handleEditFaq = (index: number) => {
+    setFaqForm({ ...faqs[index] });
+    setEditingFaqIndex(index);
+    setNewFaqKeyword('');
+  };
+
+  const handleDeleteFaq = (index: number) => {
+    setFaqs(faqs.filter((_, i) => i !== index));
+    if (editingFaqIndex === index) {
+      setFaqForm({ question: '', answer: '', keywords: [] });
+      setEditingFaqIndex(null);
+    }
+  };
+
+  const handleAddFaqKeyword = () => {
+    const trimmed = newFaqKeyword.trim().toLowerCase();
+    if (trimmed && !faqForm.keywords.includes(trimmed)) {
+      setFaqForm({ ...faqForm, keywords: [...faqForm.keywords, trimmed] });
+      setNewFaqKeyword('');
+    }
+  };
+
+  const handleRemoveFaqKeyword = (index: number) => {
+    setFaqForm({ ...faqForm, keywords: faqForm.keywords.filter((_, i) => i !== index) });
+  };
+
+  const handleGeneratePrompt = async () => {
+    if (!businessDescription.trim() || businessDescription.trim().length < 10) {
+      addToast('Describe tu negocio con al menos 10 caracteres', 'error');
+      return;
+    }
+    setIsGeneratingPrompt(true);
+    try {
+      const { data } = await api.post('/sales/generate-prompt', {
+        businessDescription: businessDescription.trim()
+      });
+      if (data.error) {
+        addToast(data.error, 'error');
+        return;
+      }
+      setSystemPrompt(data.prompt);
+      addToast('Prompt generado exitosamente. Revisa y ajusta si es necesario.', 'success');
+      setShowPromptGenerator(false);
+    } catch (error: any) {
+      addToast(error.response?.data?.error || 'Error al generar el prompt', 'error');
+    } finally {
+      setIsGeneratingPrompt(false);
+    }
   };
 
   return (
@@ -458,6 +563,50 @@ export function SettingsPage() {
                         ? 'Estás usando un Prompt 100% Personalizado. Ninguna regla de seguridad o flujo de ventas predeterminado se aplicará.' 
                         : 'Define cómo se comportará la IA de forma general. El sistema le inyectará a esta instrucción todas las herramientas de venta (AIDA, Handoff, Catálogo) por detrás de forma invisible.'}
                     </p>
+
+                    {!useCustomSystemPrompt && (
+                      <div className="mb-3">
+                        <button
+                          onClick={() => setShowPromptGenerator(!showPromptGenerator)}
+                          className="flex items-center gap-2 text-sm font-medium text-accent hover:text-accent-hover transition-colors"
+                        >
+                          <Zap className="w-4 h-4" />
+                          {showPromptGenerator ? 'Ocultar generador' : 'Generar prompt con IA desde la descripción del negocio'}
+                        </button>
+
+                        {showPromptGenerator && (
+                          <div className="mt-3 bg-gradient-to-br from-accent/5 to-corporate-50 p-4 rounded-xl border border-accent/20 space-y-3">
+                            <p className="text-xs text-corporate-500">
+                              Describe tu negocio (qué vendes, cómo quieres que sea el trato, reglas específicas) y la IA generará un prompt optimizado para el sistema automáticamente.
+                            </p>
+                            <textarea
+                              value={businessDescription}
+                              onChange={(e) => setBusinessDescription(e.target.value)}
+                              className="w-full px-3 py-2 bg-white border border-corporate-200 rounded-lg focus:ring-2 focus:ring-accent outline-none text-corporate-900 text-sm resize-none min-h-[100px]"
+                              placeholder="Ej: Somos una pizzería artesanal llamada 'La Italiana'. Quiero que el bot sea cálido y casual. Siempre preguntar el tamaño de la pizza antes de ofrecer sabores. Ofrecer complementos como papas y bebidas. No vender después de las 10pm..."
+                            />
+                            <button
+                              onClick={handleGeneratePrompt}
+                              disabled={isGeneratingPrompt || businessDescription.trim().length < 10}
+                              className="flex items-center gap-2 px-4 py-2 bg-accent hover:bg-accent-hover text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {isGeneratingPrompt ? (
+                                <>
+                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                  Generando prompt...
+                                </>
+                              ) : (
+                                <>
+                                  <Zap className="w-4 h-4" />
+                                  Generar Prompt
+                                </>
+                              )}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
                     <textarea 
                       value={systemPrompt}
                       onChange={(e) => setSystemPrompt(e.target.value)}
@@ -468,6 +617,246 @@ export function SettingsPage() {
                 </div>
               </div>
 
+            </div>
+          </div>
+
+          {/* FAQ Configuration Section */}
+          <div className="bg-white rounded-2xl shadow-sm border border-corporate-100 overflow-hidden">
+            <div className="p-5 border-b border-corporate-50 bg-corporate-50/50 flex items-center gap-3">
+              <HelpCircle className="w-5 h-5 text-accent" />
+              <h2 className="font-bold text-corporate-900">Preguntas Frecuentes (FAQ)</h2>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              <p className="text-sm text-corporate-500">
+                Define preguntas y respuestas que el bot manejará automáticamente sin usar IA. 
+                Cuando un cliente envíe un mensaje que coincida con alguna de estas preguntas, 
+                recibirá la respuesta instantáneamente.
+              </p>
+
+              {/* Existing FAQs List */}
+              {faqs.length > 0 && (
+                <div className="space-y-3">
+                  {faqs.map((faq, index) => (
+                    <div key={index} className="bg-corporate-50/50 p-4 rounded-xl border border-corporate-100">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <p className="font-bold text-corporate-900 text-sm truncate" title={faq.question}>
+                            P: {faq.question}
+                          </p>
+                          <p className="text-corporate-600 text-sm mt-1 line-clamp-2" title={faq.answer}>
+                            R: {faq.answer}
+                          </p>
+                          {faq.keywords.length > 0 && (
+                            <div className="flex flex-wrap gap-1.5 mt-2">
+                              {faq.keywords.map((kw, ki) => (
+                                <span key={ki} className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-accent/10 text-accent">
+                                  {kw}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          <button
+                            onClick={() => handleEditFaq(index)}
+                            className="p-1.5 text-corporate-400 hover:text-accent hover:bg-accent/10 rounded-lg transition-colors"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                            </svg>
+                          </button>
+                          <button
+                            onClick={() => handleDeleteFaq(index)}
+                            className="p-1.5 text-corporate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* FAQ Form */}
+              <div className="bg-corporate-50/50 p-5 rounded-xl border border-corporate-100 space-y-4">
+                <p className="text-sm font-bold text-corporate-700">
+                  {editingFaqIndex !== null ? 'Editar FAQ' : 'Agregar nueva FAQ'}
+                </p>
+                
+                <div>
+                  <label className="block text-sm font-medium text-corporate-700 mb-1">Pregunta</label>
+                  <input
+                    type="text"
+                    value={faqForm.question}
+                    onChange={(e) => setFaqForm({ ...faqForm, question: e.target.value })}
+                    className="w-full px-4 py-2 bg-white border border-corporate-200 rounded-lg focus:ring-2 focus:ring-accent outline-none text-corporate-900 text-sm"
+                    placeholder="Ej: ¿Cuál es su horario?"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-corporate-700 mb-1">Respuesta</label>
+                  <textarea
+                    value={faqForm.answer}
+                    onChange={(e) => setFaqForm({ ...faqForm, answer: e.target.value })}
+                    className="w-full px-4 py-2 bg-white border border-corporate-200 rounded-lg focus:ring-2 focus:ring-accent outline-none text-corporate-900 text-sm resize-none min-h-[80px]"
+                    placeholder="Ej: Atendemos de lunes a sábado de 9:00 a 18:00."
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-corporate-700 mb-1">Palabras Clave (para detectar la pregunta)</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={newFaqKeyword}
+                      onChange={(e) => setNewFaqKeyword(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddFaqKeyword())}
+                      className="flex-1 px-4 py-2 bg-white border border-corporate-200 rounded-lg focus:ring-2 focus:ring-accent outline-none text-corporate-900 text-sm"
+                      placeholder="Ej: horario"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddFaqKeyword}
+                      className="px-3 py-2 bg-corporate-100 hover:bg-corporate-200 text-corporate-700 rounded-lg transition-colors text-sm font-medium"
+                    >
+                      + Agregar
+                    </button>
+                  </div>
+                  {faqForm.keywords.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mt-2">
+                      {faqForm.keywords.map((kw, ki) => (
+                        <span key={ki} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-accent/10 text-accent">
+                          {kw}
+                          <button onClick={() => handleRemoveFaqKeyword(ki)} className="hover:text-red-500">×</button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2 pt-2">
+                  <button
+                    onClick={handleSaveFaq}
+                    disabled={!faqForm.question.trim() || !faqForm.answer.trim()}
+                    className="px-4 py-2 bg-accent hover:bg-accent-hover text-white rounded-lg transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {editingFaqIndex !== null ? 'Actualizar FAQ' : 'Agregar FAQ'}
+                  </button>
+                  {editingFaqIndex !== null && (
+                    <button
+                      onClick={() => { setFaqForm({ question: '', answer: '', keywords: [] }); setEditingFaqIndex(null); setNewFaqKeyword(''); }}
+                      className="px-4 py-2 text-corporate-600 hover:bg-corporate-100 rounded-lg transition-colors text-sm font-medium"
+                    >
+                      Cancelar
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Greeting Keywords Section */}
+          <div className="bg-white rounded-2xl shadow-sm border border-corporate-100 overflow-hidden">
+            <div className="p-5 border-b border-corporate-50 bg-corporate-50/50 flex items-center gap-3">
+              <MessageCircle className="w-5 h-5 text-accent" />
+              <h2 className="font-bold text-corporate-900">Saludo Personalizado</h2>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              <p className="text-sm text-corporate-500">
+                Agrega una palabra o frase de saludo personalizada que el bot usará al responder a los clientes 
+                (después del saludo horario automático). Ej: "¡Hola!", "Bienvenido".
+              </p>
+
+              {greetingKeywords.length > 0 && (
+                <div className="flex flex-wrap gap-2">
+                  {greetingKeywords.map((kw, index) => (
+                    <span key={index} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium bg-accent/10 text-accent">
+                      {kw}
+                      <button
+                        onClick={() => handleRemoveKeyword(index)}
+                        className="hover:text-red-500 transition-colors"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={newKeyword}
+                  onChange={(e) => setNewKeyword(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddKeyword())}
+                  className="flex-1 px-4 py-2 bg-white border border-corporate-200 rounded-lg focus:ring-2 focus:ring-accent outline-none text-corporate-900 text-sm"
+                  placeholder="Ej: ¡Hola!"
+                />
+                <button
+                  onClick={handleAddKeyword}
+                  disabled={!newKeyword.trim()}
+                  className="px-4 py-2 bg-accent hover:bg-accent-hover text-white rounded-lg transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Product Modification Section */}
+          <div className="bg-white rounded-2xl shadow-sm border border-corporate-100 overflow-hidden">
+            <div className="p-5 border-b border-corporate-50 bg-corporate-50/50 flex items-center gap-3">
+              <Settings className="w-5 h-5 text-accent" />
+              <h2 className="font-bold text-corporate-900">Personalización de Productos</h2>
+            </div>
+            
+            <div className="p-6 space-y-6">
+              <p className="text-sm text-corporate-500">
+                Permite que los clientes personalicen sus productos al momento de pedir (ej. "sin carne", "soy celíaco", "extra aguacate"). 
+                Las notas se guardan en la orden para que tu equipo las tenga en cuenta al preparar el pedido.
+              </p>
+
+              <div className="bg-corporate-50/50 p-5 rounded-xl border border-corporate-100">
+                <div className="flex items-start gap-4">
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-base font-bold text-corporate-900">Habilitar Modificaciones</label>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          className="sr-only peer"
+                          checked={isProductsModifiable}
+                          onChange={(e) => setIsProductsModifiable(e.target.checked)}
+                        />
+                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-accent rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-accent"></div>
+                      </label>
+                    </div>
+                    <p className="text-sm text-corporate-500 mb-4">
+                      Al activar esta opción, después de que el cliente elija un producto, la IA le preguntará si desea agregar alguna nota o modificación antes de continuar con el pedido.
+                    </p>
+
+                    {isProductsModifiable && (
+                      <div>
+                        <label className="block text-sm font-bold text-corporate-700 mb-1">Pregunta de Personalización</label>
+                        <input
+                          type="text"
+                          value={modifiableQuestion}
+                          onChange={(e) => setModifiableQuestion(e.target.value)}
+                          className="w-full px-4 py-3 bg-white border border-corporate-200 rounded-xl focus:ring-2 focus:ring-accent outline-none text-corporate-900 text-sm"
+                          placeholder="Ej: ¿Tenés alguna restricción alimenticia o preferencia que debamos tomar en cuenta?"
+                        />
+                        <p className="text-xs text-corporate-400 mt-2">
+                          Esta es la pregunta exacta que la IA le hará al cliente. Personalízala según tu negocio.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
