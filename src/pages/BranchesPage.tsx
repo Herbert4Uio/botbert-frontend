@@ -13,7 +13,7 @@ interface Branch {
   whatsappNumber?: string;
   systemPrompt: string;
   isActive: boolean;
-  allowsDelivery?: boolean;
+  deliveryOnly?: boolean;
   isBusinessHoursEnabled?: boolean;
   businessHoursStart?: string;
   businessHoursEnd?: string;
@@ -35,7 +35,7 @@ export function BranchesPage() {
   const [formWhatsappNumber, setFormWhatsappNumber] = useState('');
   const [formSystemPrompt, setFormSystemPrompt] = useState('');
   const [formIsActive, setFormIsActive] = useState(true);
-  const [formAllowsDelivery, setFormAllowsDelivery] = useState(true);
+  const [formDeliveryOnly, setFormDeliveryOnly] = useState(false);
   const [formIsBusinessHoursEnabled, setFormIsBusinessHoursEnabled] = useState(false);
   const [formBusinessHoursStart, setFormBusinessHoursStart] = useState('09:00');
   const [formBusinessHoursEnd, setFormBusinessHoursEnd] = useState('18:00');
@@ -87,7 +87,7 @@ export function BranchesPage() {
         whatsappNumber: formWhatsappNumber,
         systemPrompt: formSystemPrompt,
         isActive: formIsActive,
-        allowsDelivery: formAllowsDelivery,
+        deliveryOnly: formDeliveryOnly,
         isBusinessHoursEnabled: formIsBusinessHoursEnabled,
         businessHoursStart: formBusinessHoursStart,
         businessHoursEnd: formBusinessHoursEnd,
@@ -138,7 +138,7 @@ export function BranchesPage() {
       setFormWhatsappNumber(branch.whatsappNumber || '');
       setFormSystemPrompt(branch.systemPrompt || '');
       setFormIsActive(branch.isActive !== false);
-      setFormAllowsDelivery(branch.allowsDelivery !== false);
+      setFormDeliveryOnly(branch.deliveryOnly === true);
       setFormIsBusinessHoursEnabled(branch.isBusinessHoursEnabled || false);
       setFormBusinessHoursStart(branch.businessHoursStart || '09:00');
       setFormBusinessHoursEnd(branch.businessHoursEnd || '18:00');
@@ -151,7 +151,7 @@ export function BranchesPage() {
       setFormWhatsappNumber('');
       setFormSystemPrompt('Eres un asistente experto en ventas...');
       setFormIsActive(true);
-      setFormAllowsDelivery(true);
+      setFormDeliveryOnly(false);
       setFormIsBusinessHoursEnabled(false);
       setFormBusinessHoursStart('09:00');
       setFormBusinessHoursEnd('18:00');
@@ -215,8 +215,8 @@ export function BranchesPage() {
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${branch.allowsDelivery !== false ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'}`}>
-                        {branch.allowsDelivery !== false ? 'Envío + Recojo' : 'Solo Recojo'}
+                      <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${branch.deliveryOnly ? 'bg-indigo-100 text-indigo-700' : 'bg-green-100 text-green-700'}`}>
+                        {branch.deliveryOnly ? 'Solo Envío' : 'Envío + Recojo'}
                       </span>
                     </td>
                     {canEdit && (
@@ -313,11 +313,11 @@ export function BranchesPage() {
 
                 <div className="col-span-2 flex items-center gap-2">
                   <input
-                    type="checkbox" id="allowsDelivery" checked={formAllowsDelivery} onChange={(e) => setFormAllowsDelivery(e.target.checked)}
+                    type="checkbox" id="deliveryOnly" checked={formDeliveryOnly} onChange={(e) => setFormDeliveryOnly(e.target.checked)}
                     className="w-4 h-4 text-accent border-corporate-300 rounded focus:ring-accent"
                   />
-                  <label htmlFor="allowsDelivery" className="text-sm text-corporate-700">Realiza envíos a domicilio</label>
-                  <span className="text-xs text-corporate-400">(Si está desactivado, solo ofrecerá recojo en sucursal)</span>
+                  <label htmlFor="deliveryOnly" className="text-sm text-corporate-700">Solo envíos a domicilio</label>
+                  <span className="text-xs text-corporate-400">(Si está activado, no ofrecerá recojo en sucursal)</span>
                 </div>
 
                 <div className="col-span-2 border-t border-corporate-100 pt-4 mt-2">
