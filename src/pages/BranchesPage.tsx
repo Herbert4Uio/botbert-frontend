@@ -10,10 +10,8 @@ interface Branch {
   name: string;
   cityId: any;
   address: string;
-  whatsappNumber?: string;
-  systemPrompt: string;
-  isActive: boolean;
   deliveryOnly?: boolean;
+  isActive: boolean;
   isBusinessHoursEnabled?: boolean;
   businessHoursStart?: string;
   businessHoursEnd?: string;
@@ -32,8 +30,6 @@ export function BranchesPage() {
   const [formName, setFormName] = useState('');
   const [formCityId, setFormCityId] = useState('');
   const [formAddress, setFormAddress] = useState('');
-  const [formWhatsappNumber, setFormWhatsappNumber] = useState('');
-  const [formSystemPrompt, setFormSystemPrompt] = useState('');
   const [formIsActive, setFormIsActive] = useState(true);
   const [formDeliveryOnly, setFormDeliveryOnly] = useState(false);
   const [formIsBusinessHoursEnabled, setFormIsBusinessHoursEnabled] = useState(false);
@@ -84,9 +80,6 @@ export function BranchesPage() {
         name: formName,
         cityId: formCityId,
         address: formAddress,
-        whatsappNumber: formWhatsappNumber,
-        systemPrompt: formSystemPrompt,
-        isActive: formIsActive,
         deliveryOnly: formDeliveryOnly,
         isBusinessHoursEnabled: formIsBusinessHoursEnabled,
         businessHoursStart: formBusinessHoursStart,
@@ -135,8 +128,6 @@ export function BranchesPage() {
       setFormName(branch.name);
       setFormCityId(branch.cityId?._id || branch.cityId || '');
       setFormAddress(branch.address);
-      setFormWhatsappNumber(branch.whatsappNumber || '');
-      setFormSystemPrompt(branch.systemPrompt || '');
       setFormIsActive(branch.isActive !== false);
       setFormDeliveryOnly(branch.deliveryOnly === true);
       setFormIsBusinessHoursEnabled(branch.isBusinessHoursEnabled || false);
@@ -148,8 +139,6 @@ export function BranchesPage() {
       setFormName('');
       setFormCityId(cities.length > 0 ? cities[0]._id : '');
       setFormAddress('');
-      setFormWhatsappNumber('');
-      setFormSystemPrompt('Eres un asistente experto en ventas...');
       setFormIsActive(true);
       setFormDeliveryOnly(false);
       setFormIsBusinessHoursEnabled(false);
@@ -196,7 +185,6 @@ export function BranchesPage() {
                   <th className="px-6 py-4 font-medium text-corporate-600">Nombre</th>
                   <th className="px-6 py-4 font-medium text-corporate-600">Ciudad</th>
                   <th className="px-6 py-4 font-medium text-corporate-600">Dirección</th>
-                  <th className="px-6 py-4 font-medium text-corporate-600">Teléfono (WhatsApp)</th>
                   <th className="px-6 py-4 font-medium text-corporate-600">Estado</th>
                   <th className="px-6 py-4 font-medium text-corporate-600">Envíos</th>
                   {canEdit && <th className="px-6 py-4 font-medium text-corporate-600 text-right">Acciones</th>}
@@ -208,7 +196,6 @@ export function BranchesPage() {
                     <td className="px-6 py-4 font-bold text-corporate-900">{branch.name}</td>
                     <td className="px-6 py-4 text-corporate-600">{branch.cityId?.name || 'Sin Ciudad'}</td>
                     <td className="px-6 py-4 text-corporate-600">{branch.address}</td>
-                    <td className="px-6 py-4 font-medium text-corporate-900">{branch.whatsappNumber || 'No registrado'}</td>
                     <td className="px-6 py-4">
                       <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${branch.isActive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                         {branch.isActive ? 'Activa' : 'Inactiva'}
@@ -283,24 +270,6 @@ export function BranchesPage() {
                     className="w-full px-4 py-2 border border-corporate-200 rounded-lg focus:ring-2 focus:ring-accent outline-none"
                     placeholder="Ej. Av. Arce 1234, Zona Sopocachi"
                   />
-                </div>
-
-                <div className="col-span-2">
-                  <label className="block text-sm font-medium text-corporate-700 mb-1">Número de WhatsApp (Opcional)</label>
-                  <input
-                    type="text" value={formWhatsappNumber} onChange={(e) => setFormWhatsappNumber(e.target.value)}
-                    className="w-full px-4 py-2 border border-corporate-200 rounded-lg focus:ring-2 focus:ring-accent outline-none"
-                    placeholder="Ej. +59170000000"
-                  />
-                </div>
-
-                <div className="col-span-2">
-                  <label className="block text-sm font-medium text-corporate-700 mb-1">System Prompt (Personalidad de IA)</label>
-                  <textarea
-                    required rows={8} value={formSystemPrompt} onChange={(e) => setFormSystemPrompt(e.target.value)}
-                    className="w-full px-4 py-2 border border-corporate-200 rounded-lg focus:ring-2 focus:ring-accent outline-none resize-none text-sm"
-                  />
-                  <p className="text-xs text-corporate-400 mt-1">Este prompt define cómo se comportará la Inteligencia Artificial exclusivamente para esta sucursal.</p>
                 </div>
 
                 <div className="col-span-2 flex items-center gap-2 mt-2">
