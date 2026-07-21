@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { api } from '../services/api';
 import { useAuthStore } from '../store/authStore';
-import { Settings, QrCode, Smartphone, LogOut, Loader2, Shield, Zap, CreditCard, AlertTriangle, Save, Server, Clock, HelpCircle, Plus, Trash2, MessageCircle, CheckCircle2, X } from 'lucide-react';
+import { Settings, QrCode, Smartphone, LogOut, Loader2, Shield, Zap, CreditCard, AlertTriangle, Save, Server, Clock, HelpCircle, Plus, Trash2, MessageCircle, ExternalLink } from 'lucide-react';
 import { useToastStore } from '../store/toastStore';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
 import { io } from 'socket.io-client';
@@ -37,11 +38,9 @@ export function SettingsPage() {
   const [newFaqKeyword, setNewFaqKeyword] = useState('');
   const [isProductsModifiable, setIsProductsModifiable] = useState<boolean>(false);
   const [modifiableQuestion, setModifiableQuestion] = useState<string>('');
-  const [businessDescription, setBusinessDescription] = useState<string>('');
-  const [isGeneratingPrompt, setIsGeneratingPrompt] = useState<boolean>(false);
-  const [showPromptGenerator, setShowPromptGenerator] = useState<boolean>(false);
-  const [generatedPrompt, setGeneratedPrompt] = useState<string>('');
 
+  const location = useLocation();
+  const navigate = useNavigate();
   const { addToast } = useToastStore();
   const [modalConfig, setModalConfig] = useState<{
     isOpen: boolean;
@@ -85,6 +84,15 @@ export function SettingsPage() {
       socketInstance.disconnect();
     };
   }, [user]);
+
+  useEffect(() => {
+    if (location.state?.generatedPrompt) {
+      setSystemPrompt(location.state.generatedPrompt);
+      setUseCustomSystemPrompt(true);
+      addToast('Prompt generado aplicado. Revisa y guarda los cambios.', 'success');
+      window.history.replaceState({}, '');
+    }
+  }, [location.state]);
 
   const fetchStatus = async () => {
     try {
@@ -245,40 +253,6 @@ export function SettingsPage() {
 
   const handleRemoveFaqKeyword = (index: number) => {
     setFaqForm({ ...faqForm, keywords: faqForm.keywords.filter((_, i) => i !== index) });
-  };
-
-  const handleGeneratePrompt = async () => {
-    if (!businessDescription.trim() || businessDescription.trim().length < 10) {
-      addToast('Describe tu negocio con al menos 10 caracteres', 'error');
-      return;
-    }
-    setIsGeneratingPrompt(true);
-    try {
-      const { data } = await api.post('/sales/generate-prompt', {
-        businessDescription: businessDescription.trim()
-      });
-      if (data.error) {
-        addToast(data.error, 'error');
-        return;
-      }
-      setGeneratedPrompt(data.prompt);
-      addToast('Prompt generado exitosamente. Revisa y aplica si es correcto.', 'success');
-    } catch (error: any) {
-      addToast(error.response?.data?.error || 'Error al generar el prompt', 'error');
-    } finally {
-      setIsGeneratingPrompt(false);
-    }
-  };
-
-  const handleApplyGeneratedPrompt = () => {
-    setSystemPrompt(generatedPrompt);
-    setGeneratedPrompt('');
-    setShowPromptGenerator(false);
-    addToast('Prompt aplicado correctamente. Guarda los cambios para que surtan efecto.', 'success');
-  };
-
-  const handleCancelGeneratedPrompt = () => {
-    setGeneratedPrompt('');
   };
 
   return (
@@ -578,86 +552,12 @@ export function SettingsPage() {
                     {!useCustomSystemPrompt && (
                       <div className="mb-3">
                         <button
-                          onClick={() => setShowPromptGenerator(!showPromptGenerator)}
+                          onClick={() => navigate('/prompt-generator')}
                           className="flex items-center gap-2 text-sm font-medium text-accent hover:text-accent-hover transition-colors"
                         >
-                          <Zap className="w-4 h-4" />
-                          {showPromptGenerator ? 'Ocultar generador' : 'Generar prompt con IA desde la descripción del negocio'}
+                          <ExternalLink className="w-4 h-4" />
+                          Abrir generador de prompts con IA
                         </button>
-
-                        {showPromptGenerator && (
-                          <div className="mt-3 bg-gradient-to-br from-accent/5 to-corporate-50 p-4 rounded-xl border border-accent/20">
-                            <p className="text-xs text-corporate-500 mb-4">
-                              Describe tu negocio (qué vendes, cómo quieres que sea el trato, reglas específicas) y la IA generará un prompt optimizado para el sistema automáticamente.
-                            </p>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                              {/* Columna Izquierda: Input */}
-                              <div className="space-y-3">
-                                <div className="flex items-center justify-between">
-                                  <span className="text-xs font-bold text-corporate-500 uppercase tracking-wider">Tu descripción</span>
-                                  <span className="text-[10px] text-corporate-400">{businessDescription.length} caracteres</span>
-                                </div>
-                                <textarea
-                                  value={businessDescription}
-                                  onChange={(e) => setBusinessDescription(e.target.value)}
-                                  className="w-full px-3 py-2 bg-white border border-corporate-200 rounded-lg focus:ring-2 focus:ring-accent outline-none text-corporate-900 text-sm resize-none min-h-[160px]"
-                                  placeholder="Ej: Somos una pizzería artesanal llamada 'La Italiana'. Quiero que el bot sea cálido y casual. Siempre preguntar el tamaño de la pizza antes de ofrecer sabores. Ofrecer complementos como papas y bebidas. No vender después de las 10pm..."
-                                />
-                                <button
-                                  onClick={handleGeneratePrompt}
-                                  disabled={isGeneratingPrompt || businessDescription.trim().length < 10}
-                                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-accent hover:bg-accent-hover text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                  {isGeneratingPrompt ? (
-                                    <>
-                                      <Loader2 className="w-4 h-4 animate-spin" />
-                                      Generando...
-                                    </>
-                                  ) : (
-                                    <>
-                                      <Zap className="w-4 h-4" />
-                                      Generar Prompt
-                                    </>
-                                  )}
-                                </button>
-                              </div>
-
-                              {/* Columna Derecha: Output */}
-                              <div className="space-y-3">
-                                <div className="flex items-center justify-between">
-                                  <span className="text-xs font-bold text-corporate-500 uppercase tracking-wider">Prompt generado</span>
-                                  {generatedPrompt && (
-                                    <span className="text-[10px] text-corporate-400">{generatedPrompt.length} caracteres</span>
-                                  )}
-                                </div>
-                                <textarea
-                                  value={generatedPrompt}
-                                  readOnly
-                                  className="w-full px-3 py-2 bg-corporate-100/50 border border-corporate-300 rounded-lg text-corporate-700 text-sm resize-none min-h-[160px] cursor-default"
-                                  placeholder="Aquí aparecerá el prompt generado por la IA..."
-                                />
-                                <div className="flex gap-2">
-                                  <button
-                                    onClick={handleApplyGeneratedPrompt}
-                                    disabled={!generatedPrompt}
-                                    className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                  >
-                                    <CheckCircle2 className="w-4 h-4" />
-                                    Aplicar Prompt
-                                  </button>
-                                  <button
-                                    onClick={handleCancelGeneratedPrompt}
-                                    disabled={!generatedPrompt}
-                                    className="flex items-center justify-center gap-2 px-4 py-2.5 bg-corporate-100 hover:bg-corporate-200 text-corporate-600 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                                  >
-                                    <X className="w-4 h-4" />
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        )}
                       </div>
                     )}
 

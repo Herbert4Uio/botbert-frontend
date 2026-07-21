@@ -114,6 +114,7 @@ export function DashboardLayout() {
             {window.location.pathname.includes('/tenants') ? 'Gestión de Empresas' :
              window.location.pathname.includes('/orders') ? 'Gestión de Órdenes' : 
              window.location.pathname.includes('/chats') ? 'Chats Activos' :
+             window.location.pathname.includes('/prompt-generator') ? 'Generador de Prompt IA' :
              window.location.pathname.includes('/settings') ? 'Configuración de Empresa' :
              window.location.pathname.includes('/branches') ? 'Sucursales' :
              'Sistema'}

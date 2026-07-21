@@ -10,6 +10,7 @@ import { BranchesPage } from '../pages/BranchesPage';
 import { ChatsPage } from '../pages/ChatsPage';
 import { SettingsPage } from '../pages/SettingsPage';
 import { TenantsPage } from '../pages/TenantsPage';
+import { PromptGeneratorPage } from '../pages/PromptGeneratorPage';
 
 export function AppRouter() {
   return (
@@ -28,6 +29,7 @@ export function AppRouter() {
             <Route path="/chats" element={<ChatsPage />} />
             <Route path="/branches" element={<BranchesPage />} />
             <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/prompt-generator" element={<PromptGeneratorPage />} />
           </Route>
         </Route>
         
