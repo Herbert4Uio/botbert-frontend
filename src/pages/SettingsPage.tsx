@@ -70,15 +70,14 @@ export function SettingsPage() {
     });
 
     socketInstance.on('status', (data) => {
-      setStatus(data.status);
       if (data.status === 'DISCONNECTED') {
         setQrCode(null);
-        setPairingCode(null);
         setLoading(false);
-      }
-      if (data.status === 'CONNECTED') {
+      } else if (data.status === 'CONNECTED') {
         setLoading(false);
+        setQrCode(null);
       }
+      setStatus(data.status);
     });
 
     socketInstance.on('qr', (data) => {
@@ -180,6 +179,7 @@ export function SettingsPage() {
           await api.post('/whatsapp/disconnect');
           setStatus('DISCONNECTED');
           setQrCode(null);
+          setPairingCode(null);
           addToast('Sesión de WhatsApp cerrada', 'success');
           setModalConfig((prev) => ({ ...prev, isOpen: false }));
         } catch (error) {
