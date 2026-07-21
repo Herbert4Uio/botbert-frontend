@@ -147,10 +147,21 @@ export function SettingsPage() {
         if (data.error) {
           addToast(data.error, 'error');
           setLoading(false);
+          return;
         }
+        addToast('Solicitando código de vinculación...', 'info');
       } else {
         await api.post('/whatsapp/connect');
       }
+
+      // Safety timeout: if no socket event arrives in 30s, notify user
+      setTimeout(() => {
+        setLoading((prev) => {
+          if (prev) addToast('La conexión está tomando más de lo esperado. Si no recibes el código en 30s más, intenta de nuevo.', 'info');
+          return prev;
+        });
+      }, 30000);
+
     } catch (error: any) {
       addToast(error.response?.data?.error || 'Error al iniciar conexión', 'error');
       setLoading(false);
@@ -302,6 +313,54 @@ export function SettingsPage() {
             </div>
             
             <div className="p-6 flex flex-col items-center text-center space-y-6">
+              {/* Method selector — always visible when not connected */}
+              {status !== 'CONNECTED' && (
+                <div className="flex w-full bg-corporate-50 rounded-xl p-1">
+                  <button
+                    onClick={() => { setConnectionMethod('qr'); setQrCode(null); setPairingCode(null); }}
+                    disabled={status === 'QR_READY'}
+                    className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-all ${
+                      connectionMethod === 'qr'
+                        ? 'bg-white text-corporate-900 shadow-sm'
+                        : 'text-corporate-500 hover:text-corporate-700'
+                    } disabled:opacity-60`}
+                  >
+                    <QrCode className="w-4 h-4" />
+                    QR
+                  </button>
+                  <button
+                    onClick={() => { setConnectionMethod('pairing'); setQrCode(null); setPairingCode(null); }}
+                    disabled={status === 'QR_READY'}
+                    className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-all ${
+                      connectionMethod === 'pairing'
+                        ? 'bg-white text-corporate-900 shadow-sm'
+                        : 'text-corporate-500 hover:text-corporate-700'
+                    } disabled:opacity-60`}
+                  >
+                    <Smartphone className="w-4 h-4" />
+                    Código
+                  </button>
+                </div>
+              )}
+
+              {/* Phone input — visible when pairing selected and not connected */}
+              {status !== 'CONNECTED' && connectionMethod === 'pairing' && (
+                <div className="w-full">
+                  <label className="block text-sm font-medium text-corporate-700 mb-2 text-left">
+                    Número de teléfono con código de país (sin +)
+                  </label>
+                  <input
+                    type="tel"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    disabled={status === 'QR_READY'}
+                    placeholder="Ej: 591714254068"
+                    className="w-full px-4 py-2.5 bg-white border border-corporate-200 rounded-xl focus:ring-2 focus:ring-accent outline-none text-corporate-900 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  />
+                  <p className="text-xs text-corporate-400 text-left mt-1">Ejemplo: 591714254068 (Bolivia), 5215512345678 (México)</p>
+                </div>
+              )}
+
               {status === 'DISCONNECTED' && (
                 <>
                   <div className="w-20 h-20 bg-corporate-50 rounded-full flex items-center justify-center border-4 border-white shadow-sm">
@@ -313,46 +372,6 @@ export function SettingsPage() {
                       El asistente requiere un dispositivo vinculado para enviar y recibir mensajes.
                     </p>
                   </div>
-
-                  <div className="flex w-full bg-corporate-50 rounded-xl p-1">
-                    <button
-                      onClick={() => setConnectionMethod('qr')}
-                      className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-all ${
-                        connectionMethod === 'qr'
-                          ? 'bg-white text-corporate-900 shadow-sm'
-                          : 'text-corporate-500 hover:text-corporate-700'
-                      }`}
-                    >
-                      <QrCode className="w-4 h-4" />
-                      QR
-                    </button>
-                    <button
-                      onClick={() => setConnectionMethod('pairing')}
-                      className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-all ${
-                        connectionMethod === 'pairing'
-                          ? 'bg-white text-corporate-900 shadow-sm'
-                          : 'text-corporate-500 hover:text-corporate-700'
-                      }`}
-                    >
-                      <Smartphone className="w-4 h-4" />
-                      Código
-                    </button>
-                  </div>
-
-                  {connectionMethod === 'pairing' && (
-                    <div className="w-full">
-                      <label className="block text-sm font-medium text-corporate-700 mb-2 text-left">
-                        Número de teléfono (con código de país)
-                      </label>
-                      <input
-                        type="tel"
-                        value={phoneNumber}
-                        onChange={(e) => setPhoneNumber(e.target.value)}
-                        placeholder="Ej: 591714254068"
-                        className="w-full px-4 py-2.5 bg-white border border-corporate-200 rounded-xl focus:ring-2 focus:ring-accent outline-none text-corporate-900 text-sm"
-                      />
-                    </div>
-                  )}
 
                   <button
                     onClick={handleConnect}
@@ -384,8 +403,7 @@ export function SettingsPage() {
                       <div>
                         <h3 className="text-lg font-bold text-corporate-900">Código de Vinculación</h3>
                         <p className="text-corporate-500 text-sm mt-2">
-                          Abre WhatsApp en tu teléfono, ve a "Dispositivos Vinculados" y selecciona "Vincular con número de teléfono". 
-                          Ingresa este código cuando se solicite.
+                          Abre WhatsApp en tu teléfono, ve a <strong>Dispositivos Vinculados</strong> {'>'} <strong>Vincular con número de teléfono</strong> e ingresa este código.
                         </p>
                       </div>
                     </div>
@@ -408,6 +426,12 @@ export function SettingsPage() {
                       </div>
                     </>
                   )}
+                  <button
+                    onClick={() => { setStatus('DISCONNECTED'); setQrCode(null); setPairingCode(null); setLoading(false); }}
+                    className="w-full bg-corporate-100 hover:bg-corporate-200 text-corporate-700 px-6 py-2.5 rounded-xl font-medium transition-colors text-sm mt-2"
+                  >
+                    Cancelar
+                  </button>
                 </>
               )}
 
