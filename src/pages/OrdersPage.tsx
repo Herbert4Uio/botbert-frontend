@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import { api } from '../services/api';
-import { ShoppingBag, Loader2, X, MapPin, Calendar, CreditCard, User, CheckCircle2, Truck, PackageCheck, Clock, XCircle, LayoutGrid, List, Search } from 'lucide-react';
+import { ShoppingBag, Loader2, X, MapPin, Calendar, CreditCard, User, CheckCircle2, Truck, PackageCheck, Clock, XCircle, LayoutGrid, List, Search, MessageSquare } from 'lucide-react';
 import { useToastStore } from '../store/toastStore';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
 
@@ -9,6 +9,7 @@ interface OrderItem {
   name: string;
   quantity: number;
   price: number;
+  modifications?: string[];
 }
 
 interface Customer {
@@ -550,15 +551,37 @@ export function OrdersPage() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-corporate-100 bg-white">
-                        {selectedOrder.items.map((item, idx) => (
-                          <tr key={idx} className="hover:bg-corporate-50/50 transition-colors">
-                            <td className="px-6 py-4 font-medium text-corporate-800">{item.name}</td>
-                            <td className="px-6 py-4 text-center">
-                              <span className="bg-corporate-100 text-corporate-700 px-2.5 py-1 rounded-md font-medium">{item.quantity}</span>
-                            </td>
-                            <td className="px-6 py-4 text-right font-medium text-corporate-900">${(item.quantity * item.price).toFixed(2)}</td>
-                          </tr>
-                        ))}
+                        {selectedOrder.items.map((item, idx) => {
+                          const hasModifications = item.modifications && item.modifications.length > 0;
+                          return (
+                            <tr key={idx} className={`transition-colors ${hasModifications ? 'bg-amber-50/80 hover:bg-amber-100/60 border-l-4 border-l-amber-400' : 'hover:bg-corporate-50/50'}`}>
+                              <td className="px-6 py-4">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-medium text-corporate-800">{item.name}</span>
+                                  {hasModifications && (
+                                    <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-700 text-[10px] font-bold px-2 py-0.5 rounded-full border border-amber-200 animate-pulse">
+                                      <MessageSquare className="w-3 h-3" />
+                                      {item.modifications!.length} mod.
+                                    </span>
+                                  )}
+                                </div>
+                                {hasModifications && (
+                                  <div className="mt-1.5 flex flex-wrap gap-1">
+                                    {item.modifications!.map((mod, mi) => (
+                                      <span key={mi} className="inline-block bg-amber-50 text-amber-700 text-[11px] px-2 py-0.5 rounded-md border border-amber-200/60 italic">
+                                        ✎ {mod}
+                                      </span>
+                                    ))}
+                                  </div>
+                                )}
+                              </td>
+                              <td className="px-6 py-4 text-center">
+                                <span className="bg-corporate-100 text-corporate-700 px-2.5 py-1 rounded-md font-medium">{item.quantity}</span>
+                              </td>
+                              <td className="px-6 py-4 text-right font-medium text-corporate-900">${(item.quantity * item.price).toFixed(2)}</td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                       <tfoot className="bg-corporate-900 text-white">
                         <tr>
