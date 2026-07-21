@@ -359,11 +359,7 @@ export function SettingsPage() {
                       <p className="text-xs text-corporate-400 text-left mt-1">Ejemplo: 591714254068 (Bolivia), 5215512345678 (México)</p>
                     </div>
                   )}
-                </>
-              )}
 
-              {status === 'DISCONNECTED' && (
-                <>
                   <div className="w-20 h-20 bg-corporate-50 rounded-full flex items-center justify-center border-4 border-white shadow-sm">
                     <Smartphone className="w-8 h-8 text-corporate-400" />
                   </div>
@@ -389,54 +385,69 @@ export function SettingsPage() {
                 </>
               )}
 
-              {status === 'QR_READY' && (
+              {/* Pairing code — always visible while set, regardless of status */}
+              {pairingCode && (
                 <>
-                  {pairingCode ? (
-                    <div className="w-full space-y-4">
-                      <div className="p-6 bg-corporate-50 border-2 border-dashed border-accent rounded-2xl">
-                        <p className="text-sm font-medium text-corporate-500 mb-2 text-center">
-                          Introduce este código en WhatsApp
-                        </p>
-                        <p className="text-3xl font-bold text-accent text-center tracking-[0.25em] select-all font-mono">
-                          {pairingCode}
-                        </p>
+                  <div className="w-full space-y-4">
+                    {status === 'CONNECTED' && (
+                      <div className="flex items-center justify-center gap-2 text-green-600 text-sm font-medium mb-2">
+                        <div className="w-2 h-2 rounded-full bg-green-500" />
+                        Dispositivo vinculado correctamente
                       </div>
-                      <div>
-                        <h3 className="text-lg font-bold text-corporate-900">Código de Vinculación</h3>
-                        <p className="text-corporate-500 text-sm mt-2">
-                          Abre WhatsApp en tu teléfono, ve a <strong>Dispositivos Vinculados</strong> {'>'} <strong>Vincular con número de teléfono</strong> e ingresa este código.
-                        </p>
-                      </div>
+                    )}
+                    <div className="p-6 bg-corporate-50 border-2 border-dashed border-accent rounded-2xl">
+                      <p className="text-sm font-medium text-corporate-500 mb-2 text-center">
+                        Introduce este código en WhatsApp
+                      </p>
+                      <p className="text-3xl font-bold text-accent text-center tracking-[0.25em] select-all font-mono">
+                        {pairingCode}
+                      </p>
                     </div>
-                  ) : (
-                    <>
-                      <div className="p-4 bg-white border border-corporate-200 rounded-2xl shadow-sm inline-block">
-                        {qrCode ? (
-                           <QRCodeSVG value={qrCode} size={200} />
-                        ) : (
-                           <div className="w-[200px] h-[200px] flex items-center justify-center">
-                              <Loader2 className="w-8 h-8 animate-spin text-accent" />
-                           </div>
-                        )}
-                      </div>
-                      <div>
-                        <h3 className="text-lg font-bold text-corporate-900">Escanea el QR</h3>
-                        <p className="text-corporate-500 text-sm mt-2">
-                          Abre WhatsApp en tu teléfono, ve a "Dispositivos Vinculados" y escanea este código.
-                        </p>
-                      </div>
-                    </>
-                  )}
+                    <div>
+                      <h3 className="text-lg font-bold text-corporate-900">Código de Vinculación</h3>
+                      <p className="text-corporate-500 text-sm mt-2">
+                        Abre WhatsApp en tu teléfono, ve a <strong>Dispositivos Vinculados</strong> {'>'} <strong>Vincular con número de teléfono</strong> e ingresa este código.
+                      </p>
+                    </div>
+                  </div>
                   <button
                     onClick={() => { setStatus('DISCONNECTED'); setQrCode(null); setPairingCode(null); setLoading(false); }}
-                    className="w-full bg-corporate-100 hover:bg-corporate-200 text-corporate-700 px-6 py-2.5 rounded-xl font-medium transition-colors text-sm mt-2"
+                    className="w-full bg-corporate-100 hover:bg-corporate-200 text-corporate-700 px-6 py-2.5 rounded-xl font-medium transition-colors text-sm"
                   >
                     Cancelar
                   </button>
                 </>
               )}
 
-              {status === 'CONNECTED' && (
+              {/* QR code — only if no pairing code and status is QR_READY */}
+              {!pairingCode && status === 'QR_READY' && (
+                <>
+                  <div className="p-4 bg-white border border-corporate-200 rounded-2xl shadow-sm inline-block">
+                    {qrCode ? (
+                       <QRCodeSVG value={qrCode} size={200} />
+                    ) : (
+                       <div className="w-[200px] h-[200px] flex items-center justify-center">
+                          <Loader2 className="w-8 h-8 animate-spin text-accent" />
+                       </div>
+                    )}
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-corporate-900">Escanea el QR</h3>
+                    <p className="text-corporate-500 text-sm mt-2">
+                      Abre WhatsApp en tu teléfono, ve a "Dispositivos Vinculados" y escanea este código.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => { setStatus('DISCONNECTED'); setQrCode(null); setPairingCode(null); setLoading(false); }}
+                    className="w-full bg-corporate-100 hover:bg-corporate-200 text-corporate-700 px-6 py-2.5 rounded-xl font-medium transition-colors text-sm"
+                  >
+                    Cancelar
+                  </button>
+                </>
+              )}
+
+              {/* Connected — only if no pairing code */}
+              {!pairingCode && status === 'CONNECTED' && (
                 <>
                   <div className="relative">
                     <div className="w-20 h-20 bg-green-50 border-4 border-white shadow-sm rounded-full flex items-center justify-center relative z-10">
