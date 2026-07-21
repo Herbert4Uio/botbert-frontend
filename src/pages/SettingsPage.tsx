@@ -19,6 +19,9 @@ export function SettingsPage() {
   const [status, setStatus] = useState<'DISCONNECTED' | 'QR_READY' | 'CONNECTED'>('DISCONNECTED');
   const [qrCode, setQrCode] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [connectionMethod, setConnectionMethod] = useState<'qr' | 'pairing'>('qr');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [pairingCode, setPairingCode] = useState<string | null>(null);
   
   const [tenant, setTenant] = useState<any>(null);
   const [aiMemoryLimit, setAiMemoryLimit] = useState(10);
@@ -70,12 +73,19 @@ export function SettingsPage() {
       setStatus(data.status);
       if (data.status === 'CONNECTED' || data.status === 'DISCONNECTED') {
         setQrCode(null);
+        setPairingCode(null);
         setLoading(false);
       }
     });
 
     socketInstance.on('qr', (data) => {
       setQrCode(data.qr);
+      setStatus('QR_READY');
+      setLoading(false);
+    });
+
+    socketInstance.on('pairingCode', (data) => {
+      setPairingCode(data.code);
       setStatus('QR_READY');
       setLoading(false);
     });
@@ -128,10 +138,21 @@ export function SettingsPage() {
 
   const handleConnect = async () => {
     setLoading(true);
+    setQrCode(null);
+    setPairingCode(null);
     try {
-      await api.post('/whatsapp/connect');
-    } catch (error) {
-      console.error(error);
+      if (connectionMethod === 'pairing' && phoneNumber.trim()) {
+        const cleaned = phoneNumber.trim().replace(/[^0-9]/g, '');
+        const { data } = await api.post('/whatsapp/connect/pairing', { phoneNumber: cleaned });
+        if (data.error) {
+          addToast(data.error, 'error');
+          setLoading(false);
+        }
+      } else {
+        await api.post('/whatsapp/connect');
+      }
+    } catch (error: any) {
+      addToast(error.response?.data?.error || 'Error al iniciar conexión', 'error');
       setLoading(false);
     }
   };
@@ -292,34 +313,101 @@ export function SettingsPage() {
                       El asistente requiere un dispositivo vinculado para enviar y recibir mensajes.
                     </p>
                   </div>
-                  <button 
+
+                  <div className="flex w-full bg-corporate-50 rounded-xl p-1">
+                    <button
+                      onClick={() => setConnectionMethod('qr')}
+                      className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-all ${
+                        connectionMethod === 'qr'
+                          ? 'bg-white text-corporate-900 shadow-sm'
+                          : 'text-corporate-500 hover:text-corporate-700'
+                      }`}
+                    >
+                      <QrCode className="w-4 h-4" />
+                      QR
+                    </button>
+                    <button
+                      onClick={() => setConnectionMethod('pairing')}
+                      className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-all ${
+                        connectionMethod === 'pairing'
+                          ? 'bg-white text-corporate-900 shadow-sm'
+                          : 'text-corporate-500 hover:text-corporate-700'
+                      }`}
+                    >
+                      <Smartphone className="w-4 h-4" />
+                      Código
+                    </button>
+                  </div>
+
+                  {connectionMethod === 'pairing' && (
+                    <div className="w-full">
+                      <label className="block text-sm font-medium text-corporate-700 mb-2 text-left">
+                        Número de teléfono (con código de país)
+                      </label>
+                      <input
+                        type="tel"
+                        value={phoneNumber}
+                        onChange={(e) => setPhoneNumber(e.target.value)}
+                        placeholder="Ej: 591714254068"
+                        className="w-full px-4 py-2.5 bg-white border border-corporate-200 rounded-xl focus:ring-2 focus:ring-accent outline-none text-corporate-900 text-sm"
+                      />
+                    </div>
+                  )}
+
+                  <button
                     onClick={handleConnect}
-                    disabled={loading}
+                    disabled={loading || (connectionMethod === 'pairing' && !phoneNumber.trim())}
                     className="w-full bg-accent hover:bg-accent-hover text-white px-6 py-2.5 rounded-xl font-medium transition-colors flex items-center justify-center gap-2 shadow-sm disabled:opacity-50"
                   >
-                    {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <QrCode className="w-5 h-5" />}
-                    {loading ? 'Inicializando...' : 'Vincular Dispositivo'}
+                    {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : connectionMethod === 'pairing' ? <Smartphone className="w-5 h-5" /> : <QrCode className="w-5 h-5" />}
+                    {loading
+                      ? 'Inicializando...'
+                      : connectionMethod === 'pairing'
+                        ? 'Solicitar Código'
+                        : 'Vincular Dispositivo'}
                   </button>
                 </>
               )}
 
               {status === 'QR_READY' && (
                 <>
-                  <div className="p-4 bg-white border border-corporate-200 rounded-2xl shadow-sm inline-block">
-                    {qrCode ? (
-                       <QRCodeSVG value={qrCode} size={200} />
-                    ) : (
-                       <div className="w-[200px] h-[200px] flex items-center justify-center">
-                          <Loader2 className="w-8 h-8 animate-spin text-accent" />
-                       </div>
-                    )}
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-corporate-900">Escanea el QR</h3>
-                    <p className="text-corporate-500 text-sm mt-2">
-                      Abre WhatsApp en tu teléfono, ve a "Dispositivos Vinculados" y escanea este código.
-                    </p>
-                  </div>
+                  {pairingCode ? (
+                    <div className="w-full space-y-4">
+                      <div className="p-6 bg-corporate-50 border-2 border-dashed border-accent rounded-2xl">
+                        <p className="text-sm font-medium text-corporate-500 mb-2 text-center">
+                          Introduce este código en WhatsApp
+                        </p>
+                        <p className="text-3xl font-bold text-accent text-center tracking-[0.25em] select-all font-mono">
+                          {pairingCode}
+                        </p>
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-bold text-corporate-900">Código de Vinculación</h3>
+                        <p className="text-corporate-500 text-sm mt-2">
+                          Abre WhatsApp en tu teléfono, ve a "Dispositivos Vinculados" y selecciona "Vincular con número de teléfono". 
+                          Ingresa este código cuando se solicite.
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="p-4 bg-white border border-corporate-200 rounded-2xl shadow-sm inline-block">
+                        {qrCode ? (
+                           <QRCodeSVG value={qrCode} size={200} />
+                        ) : (
+                           <div className="w-[200px] h-[200px] flex items-center justify-center">
+                              <Loader2 className="w-8 h-8 animate-spin text-accent" />
+                           </div>
+                        )}
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-bold text-corporate-900">Escanea el QR</h3>
+                        <p className="text-corporate-500 text-sm mt-2">
+                          Abre WhatsApp en tu teléfono, ve a "Dispositivos Vinculados" y escanea este código.
+                        </p>
+                      </div>
+                    </>
+                  )}
                 </>
               )}
 
