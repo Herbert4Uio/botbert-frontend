@@ -71,16 +71,19 @@ export function SettingsPage() {
 
     socketInstance.on('status', (data) => {
       setStatus(data.status);
-      if (data.status === 'CONNECTED' || data.status === 'DISCONNECTED') {
+      if (data.status === 'DISCONNECTED') {
         setQrCode(null);
         setPairingCode(null);
+        setLoading(false);
+      }
+      if (data.status === 'CONNECTED') {
         setLoading(false);
       }
     });
 
     socketInstance.on('qr', (data) => {
-      setQrCode(data.qr);
       setStatus('QR_READY');
+      setQrCode(data.qr);
       setLoading(false);
     });
 
@@ -313,52 +316,50 @@ export function SettingsPage() {
             </div>
             
             <div className="p-6 flex flex-col items-center text-center space-y-6">
-              {/* Method selector — always visible when not connected */}
-              {status !== 'CONNECTED' && (
-                <div className="flex w-full bg-corporate-50 rounded-xl p-1">
-                  <button
-                    onClick={() => { setConnectionMethod('qr'); setQrCode(null); setPairingCode(null); }}
-                    disabled={status === 'QR_READY'}
-                    className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-all ${
-                      connectionMethod === 'qr'
-                        ? 'bg-white text-corporate-900 shadow-sm'
-                        : 'text-corporate-500 hover:text-corporate-700'
-                    } disabled:opacity-60`}
-                  >
-                    <QrCode className="w-4 h-4" />
-                    QR
-                  </button>
-                  <button
-                    onClick={() => { setConnectionMethod('pairing'); setQrCode(null); setPairingCode(null); }}
-                    disabled={status === 'QR_READY'}
-                    className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-all ${
-                      connectionMethod === 'pairing'
-                        ? 'bg-white text-corporate-900 shadow-sm'
-                        : 'text-corporate-500 hover:text-corporate-700'
-                    } disabled:opacity-60`}
-                  >
-                    <Smartphone className="w-4 h-4" />
-                    Código
-                  </button>
-                </div>
-              )}
+              {/* Method selector + phone input — only when disconnected */}
+              {status === 'DISCONNECTED' && (
+                <>
+                  <div className="flex w-full bg-corporate-50 rounded-xl p-1">
+                    <button
+                      onClick={() => { setConnectionMethod('qr'); setQrCode(null); setPairingCode(null); }}
+                      className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-all ${
+                        connectionMethod === 'qr'
+                          ? 'bg-white text-corporate-900 shadow-sm'
+                          : 'text-corporate-500 hover:text-corporate-700'
+                      }`}
+                    >
+                      <QrCode className="w-4 h-4" />
+                      QR
+                    </button>
+                    <button
+                      onClick={() => { setConnectionMethod('pairing'); setQrCode(null); setPairingCode(null); }}
+                      className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-all ${
+                        connectionMethod === 'pairing'
+                          ? 'bg-white text-corporate-900 shadow-sm'
+                          : 'text-corporate-500 hover:text-corporate-700'
+                      }`}
+                    >
+                      <Smartphone className="w-4 h-4" />
+                      Código
+                    </button>
+                  </div>
 
-              {/* Phone input — visible when pairing selected and not connected */}
-              {status !== 'CONNECTED' && connectionMethod === 'pairing' && (
-                <div className="w-full">
-                  <label className="block text-sm font-medium text-corporate-700 mb-2 text-left">
-                    Número de teléfono con código de país (sin +)
-                  </label>
-                  <input
-                    type="tel"
-                    value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value)}
-                    disabled={status === 'QR_READY'}
-                    placeholder="Ej: 591714254068"
-                    className="w-full px-4 py-2.5 bg-white border border-corporate-200 rounded-xl focus:ring-2 focus:ring-accent outline-none text-corporate-900 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                  />
-                  <p className="text-xs text-corporate-400 text-left mt-1">Ejemplo: 591714254068 (Bolivia), 5215512345678 (México)</p>
-                </div>
+                  {connectionMethod === 'pairing' && (
+                    <div className="w-full">
+                      <label className="block text-sm font-medium text-corporate-700 mb-2 text-left">
+                        Número de teléfono con código de país (sin +)
+                      </label>
+                      <input
+                        type="tel"
+                        value={phoneNumber}
+                        onChange={(e) => setPhoneNumber(e.target.value)}
+                        placeholder="Ej: 591714254068"
+                        className="w-full px-4 py-2.5 bg-white border border-corporate-200 rounded-xl focus:ring-2 focus:ring-accent outline-none text-corporate-900 text-sm"
+                      />
+                      <p className="text-xs text-corporate-400 text-left mt-1">Ejemplo: 591714254068 (Bolivia), 5215512345678 (México)</p>
+                    </div>
+                  )}
+                </>
               )}
 
               {status === 'DISCONNECTED' && (
