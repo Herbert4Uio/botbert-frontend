@@ -1,6 +1,6 @@
 import { Outlet } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
-import { LogOut, LayoutDashboard, ShoppingBag, Package, Settings, Layers, MapPin, Building2, MessageSquare } from 'lucide-react';
+import { LogOut, LayoutDashboard, ShoppingBag, Package, Settings, Layers, MapPin, Building2, MessageSquare, Sparkles } from 'lucide-react';
 import { cn } from '../utils/cn';
 import { ToastContainer } from '../components/ui/ToastContainer';
 
@@ -85,10 +85,17 @@ export function DashboardLayout() {
                   </a>
                   <a href="/settings" className={cn(
                     "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors",
-                    window.location.pathname.includes('/settings') ? "bg-corporate-800 text-white" : "text-corporate-300 hover:bg-corporate-800/50 hover:text-white"
+                    window.location.pathname.includes('/settings') && !window.location.pathname.includes('/prompt-generator') ? "bg-corporate-800 text-white" : "text-corporate-300 hover:bg-corporate-800/50 hover:text-white"
                   )}>
                     <Settings className="w-5 h-5" />
                     Configuración
+                  </a>
+                  <a href="/prompt-generator" className={cn(
+                    "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors",
+                    window.location.pathname.includes('/prompt-generator') ? "bg-corporate-800 text-white" : "text-corporate-300 hover:bg-corporate-800/50 hover:text-white"
+                  )}>
+                    <Sparkles className="w-5 h-5" />
+                    Generador de Prompt
                   </a>
                 </>
               )}
