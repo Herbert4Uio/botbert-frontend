@@ -149,22 +149,7 @@ export function DashboardLayout() {
 
       {/* Main Content */}
       <main className="flex-1 overflow-auto">
-        <header className="bg-white border-b border-corporate-100 px-8 py-4 sticky top-0 z-10 flex justify-between items-center">
-          <h2 className="text-lg font-medium text-corporate-900">
-            {window.location.pathname.includes('/tenants') ? 'Gestión de Empresas' :
-             window.location.pathname.includes('/orders') ? 'Gestión de Órdenes' : 
-             window.location.pathname.includes('/chats') ? 'Chats Activos' :
-             window.location.pathname.includes('/prompt-generator') ? 'Generador de Prompt IA' :
-             window.location.pathname.includes('/settings') ? 'Configuración de Empresa' :
-             window.location.pathname.includes('/branches') ? 'Sucursales' :
-             'Sistema'}
-          </h2>
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-accent/10 text-accent">
-              Rol: {user?.role}
-            </span>
-          </div>
-        </header>
+
         <div className="flex-1 overflow-y-auto bg-corporate-50 p-8 custom-scrollbar relative">
           <Outlet />
         </div>
