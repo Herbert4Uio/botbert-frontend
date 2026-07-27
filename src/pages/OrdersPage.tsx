@@ -69,11 +69,23 @@ const KANBAN_COLUMNS = ['PENDING', 'CONFIRMED', 'ON_THE_WAY', 'DELIVERED'];
 
 const getMapsLink = (address?: string) => {
   if (!address) return null;
-  const match = address.match(/Lat:\s*(-?\d+\.\d+),\s*Lng:\s*(-?\d+\.\d+)/i);
+  const match = address.match(/Lat:\s*(-?\d+(?:\.\d+)?),\s*Lng:\s*(-?\d+(?:\.\d+)?)/i);
   if (match) {
     return `https://www.google.com/maps?q=${match[1]},${match[2]}`;
   }
   return null;
+};
+
+const formatAddress = (address?: string) => {
+  if (!address) return <span className="text-corporate-300 italic">No provista</span>;
+  if (address.includes('[El cliente ha compartido una ubicación GPS por WhatsApp')) {
+    return (
+      <span className="flex items-center gap-2 text-indigo-700 font-semibold">
+        📍 Ubicación GPS compartida vía WhatsApp
+      </span>
+    );
+  }
+  return address;
 };
 
 export function OrdersPage() {
@@ -644,9 +656,7 @@ export function OrdersPage() {
                             <p className="text-[11px] text-corporate-400 font-medium mb-1">Dirección de Entrega</p>
                             <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
                               <p className="text-sm font-medium text-corporate-900">
-                                {selectedOrder.shippingAddress || (
-                                  <span className="text-corporate-300 italic">No provista</span>
-                                )}
+                                {formatAddress(selectedOrder.shippingAddress)}
                               </p>
                               {(() => {
                                 const mapLink = getMapsLink(selectedOrder.shippingAddress);
