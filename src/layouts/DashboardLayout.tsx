@@ -1,6 +1,6 @@
 import { Outlet } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
-import { LogOut, LayoutDashboard, ShoppingBag, Package, Settings, Layers, MapPin, Building2, MessageSquare, Sparkles } from 'lucide-react';
+import { LogOut, LayoutDashboard, ShoppingBag, Package, Settings, Layers, MapPin, Building2, MessageSquare, Sparkles, TextSearch, GitBranch } from 'lucide-react';
 import { cn } from '../utils/cn';
 import { ToastContainer } from '../components/ui/ToastContainer';
 
@@ -97,6 +97,30 @@ export function DashboardLayout() {
                     <Sparkles className="w-5 h-5" />
                     Generador de Prompt
                   </a>
+
+                  <div className="border-t border-corporate-800 my-2" />
+
+                  <a href="/verticals" className={cn(
+                    "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors",
+                    window.location.pathname.includes('/verticals') ? "bg-corporate-800 text-white" : "text-corporate-300 hover:bg-corporate-800/50 hover:text-white"
+                  )}>
+                    <Building2 className="w-5 h-5" />
+                    Verticales
+                  </a>
+                  <a href="/synonyms" className={cn(
+                    "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors",
+                    window.location.pathname.includes('/synonyms') ? "bg-corporate-800 text-white" : "text-corporate-300 hover:bg-corporate-800/50 hover:text-white"
+                  )}>
+                    <TextSearch className="w-5 h-5" />
+                    Sinónimos
+                  </a>
+                  <a href="/playbooks" className={cn(
+                    "flex items-center gap-3 px-4 py-3 rounded-lg transition-colors",
+                    window.location.pathname.includes('/playbooks') ? "bg-corporate-800 text-white" : "text-corporate-300 hover:bg-corporate-800/50 hover:text-white"
+                  )}>
+                    <GitBranch className="w-5 h-5" />
+                    Playbooks
+                  </a>
                 </>
               )}
             </>
@@ -124,6 +148,12 @@ export function DashboardLayout() {
              window.location.pathname.includes('/prompt-generator') ? 'Generador de Prompt IA' :
              window.location.pathname.includes('/settings') ? 'Configuración de Empresa' :
              window.location.pathname.includes('/branches') ? 'Sucursales' :
+             window.location.pathname.includes('/verticals') ? 'Gestión de Verticales' :
+             window.location.pathname.includes('/synonyms') ? 'Diccionario de Sinónimos' :
+             window.location.pathname.includes('/playbooks') ? 'Playbooks de Conversación' :
+             window.location.pathname.includes('/catalog') ? 'Catálogo de Productos' :
+             window.location.pathname.includes('/categories') ? 'Categorías' :
+             window.location.pathname.includes('/cities') ? 'Ciudades' :
              'Sistema'}
           </h2>
           <div className="flex items-center gap-2">

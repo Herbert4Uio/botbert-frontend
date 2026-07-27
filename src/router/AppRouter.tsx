@@ -11,6 +11,9 @@ import { ChatsPage } from '../pages/ChatsPage';
 import { SettingsPage } from '../pages/SettingsPage';
 import { TenantsPage } from '../pages/TenantsPage';
 import { PromptGeneratorPage } from '../pages/PromptGeneratorPage';
+import { VerticalsPage } from '../pages/VerticalsPage';
+import { SynonymsPage } from '../pages/SynonymsPage';
+import { PlaybooksPage } from '../pages/PlaybooksPage';
 
 export function AppRouter() {
   return (
@@ -30,6 +33,9 @@ export function AppRouter() {
             <Route path="/branches" element={<BranchesPage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/prompt-generator" element={<PromptGeneratorPage />} />
+            <Route path="/verticals" element={<VerticalsPage />} />
+            <Route path="/synonyms" element={<SynonymsPage />} />
+            <Route path="/playbooks" element={<PlaybooksPage />} />
           </Route>
         </Route>
         
