@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { api } from '../../services/api';
 import { io } from 'socket.io-client';
 import { QRCodeSVG } from 'qrcode.react';
-import { Smartphone, QrCode, LogOut, Loader2 } from 'lucide-react';
+import { Smartphone, QrCode, LogOut, Loader2, Trash2 } from 'lucide-react';
 import { useToastStore } from '../../store/toastStore';
 import { ConfirmModal } from '../ui/ConfirmModal';
 
@@ -116,6 +116,25 @@ export function WhatsAppConnection({ tenantId }: Props) {
           addToast('Sesión de WhatsApp cerrada', 'success');
         } catch {
           addToast('Error al cerrar sesión', 'error');
+          setModalConfig((prev) => ({ ...prev, isOpen: false }));
+        }
+      },
+    });
+  };
+
+  const handleResetMemory = () => {
+    setModalConfig({
+      isOpen: true,
+      title: 'Limpiar Memoria de la IA',
+      message: '¿Estás seguro de reiniciar la memoria de la IA? Los clientes actuales empezarán desde cero la próxima vez que escriban, pero el historial en la base de datos NO se borrará.',
+      isDestructive: true,
+      onConfirm: async () => {
+        try {
+          const res = await api.post('/sales/reset-memory');
+          setModalConfig((prev) => ({ ...prev, isOpen: false }));
+          addToast(`Memoria limpiada. ${res.data.count} chats reiniciados.`, 'success');
+        } catch (error: any) {
+          addToast('Error al limpiar la memoria', 'error');
           setModalConfig((prev) => ({ ...prev, isOpen: false }));
         }
       },
@@ -285,7 +304,17 @@ export function WhatsAppConnection({ tenantId }: Props) {
           </span>
           <h2 className="font-bold text-corporate-900">Zona de Riesgo</h2>
         </div>
-        <div className="p-6">
+        <div className="p-6 space-y-4">
+          <button
+            onClick={handleResetMemory}
+            className="w-full bg-orange-50 text-orange-600 hover:bg-orange-100 border border-orange-200 px-4 py-3 rounded-xl font-medium transition-colors flex items-center justify-between text-sm"
+          >
+            <span className="flex items-center gap-2">
+              <Trash2 className="w-4 h-4" />
+              Limpiar Memoria de la IA
+            </span>
+          </button>
+          
           <button
             onClick={handleDisconnect}
             disabled={status === 'DISCONNECTED'}
