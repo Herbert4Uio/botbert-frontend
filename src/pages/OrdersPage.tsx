@@ -67,6 +67,15 @@ const STATUS_MAP: Record<string, { label: string, color: string, icon: any }> = 
 
 const KANBAN_COLUMNS = ['PENDING', 'CONFIRMED', 'ON_THE_WAY', 'DELIVERED'];
 
+const getMapsLink = (address?: string) => {
+  if (!address) return null;
+  const match = address.match(/Lat:\s*(-?\d+\.\d+),\s*Lng:\s*(-?\d+\.\d+)/i);
+  if (match) {
+    return `https://www.google.com/maps?q=${match[1]},${match[2]}`;
+  }
+  return null;
+};
+
 export function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
@@ -632,12 +641,28 @@ export function OrdersPage() {
 
                         {selectedOrder.deliveryType === 'DELIVERY' && (
                           <div className="sm:col-span-2">
-                            <p className="text-[11px] text-corporate-400 font-medium">Dirección de Entrega</p>
-                            <p className="text-sm font-medium text-corporate-900">
-                              {selectedOrder.shippingAddress || (
-                                <span className="text-corporate-300 italic">No provista</span>
-                              )}
-                            </p>
+                            <p className="text-[11px] text-corporate-400 font-medium mb-1">Dirección de Entrega</p>
+                            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                              <p className="text-sm font-medium text-corporate-900">
+                                {selectedOrder.shippingAddress || (
+                                  <span className="text-corporate-300 italic">No provista</span>
+                                )}
+                              </p>
+                              {(() => {
+                                const mapLink = getMapsLink(selectedOrder.shippingAddress);
+                                return mapLink ? (
+                                  <a
+                                    href={mapLink}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="shrink-0 inline-flex items-center gap-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold px-3 py-1.5 rounded-lg border border-indigo-200 transition-colors"
+                                  >
+                                    <MapPin className="w-3.5 h-3.5" />
+                                    Ver en Maps
+                                  </a>
+                                ) : null;
+                              })()}
+                            </div>
                           </div>
                         )}
                       </div>
