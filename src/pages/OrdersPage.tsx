@@ -10,6 +10,7 @@ interface OrderItem {
   quantity: number;
   price: number;
   modifications?: string[];
+  scheduledDates?: string[];
 }
 
 interface Customer {
@@ -46,6 +47,14 @@ interface Order {
   shippingTimeRange?: string;
   shippingAddress?: string;
   shippingInstructions?: string;
+  eventDetails?: {
+    eventName: string;
+    eventDate: string;
+    eventTime: string;
+    numberOfPeople: number;
+    serviceType: string;
+    dietaryRestrictions: string;
+  };
 }
 
 const STATUS_MAP: Record<string, { label: string, color: string, icon: any }> = {
@@ -534,6 +543,49 @@ export function OrdersPage() {
                       </div>
                     </div>
                   </div>
+
+                  {/* ── Detalles del Evento (Catering) ── */}
+                  {selectedOrder.eventDetails && selectedOrder.eventDetails.eventName && (
+                    <div className="bg-white rounded-xl border border-corporate-100 shadow-sm overflow-hidden border-t-4 border-t-purple-500">
+                      <div className="bg-gradient-to-r from-purple-50 to-white px-4 py-3 border-b border-corporate-100">
+                        <h4 className="text-[11px] font-bold text-purple-600 uppercase tracking-wider flex items-center gap-2">
+                          <Calendar className="w-3.5 h-3.5" /> Catering / Evento
+                        </h4>
+                      </div>
+                      <div className="p-4 space-y-3">
+                        <div>
+                          <p className="text-[11px] text-corporate-400 font-medium">Evento</p>
+                          <p className="text-sm font-semibold text-corporate-900">{selectedOrder.eventDetails.eventName}</p>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <p className="text-[11px] text-corporate-400 font-medium">Fecha</p>
+                            <p className="text-sm font-semibold text-corporate-900">{selectedOrder.eventDetails.eventDate}</p>
+                          </div>
+                          <div>
+                            <p className="text-[11px] text-corporate-400 font-medium">Hora</p>
+                            <p className="text-sm font-semibold text-corporate-900">{selectedOrder.eventDetails.eventTime}</p>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <p className="text-[11px] text-corporate-400 font-medium">Personas</p>
+                            <p className="text-sm font-semibold text-corporate-900">{selectedOrder.eventDetails.numberOfPeople}</p>
+                          </div>
+                          <div>
+                            <p className="text-[11px] text-corporate-400 font-medium">Servicio</p>
+                            <p className="text-sm font-semibold text-corporate-900">{selectedOrder.eventDetails.serviceType}</p>
+                          </div>
+                        </div>
+                        {selectedOrder.eventDetails.dietaryRestrictions && selectedOrder.eventDetails.dietaryRestrictions.toLowerCase() !== 'ninguna' && (
+                          <div className="pt-2">
+                            <p className="text-[11px] text-red-400 font-bold">Restricciones Alimentarias</p>
+                            <p className="text-sm text-red-600 font-medium">{selectedOrder.eventDetails.dietaryRestrictions}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* ═══ Columna principal ═══ */}
@@ -626,11 +678,12 @@ export function OrdersPage() {
                         <tbody className="divide-y divide-corporate-100">
                           {selectedOrder.items.map((item, idx) => {
                             const hasMods = item.modifications && item.modifications.length > 0;
+                            const hasDates = item.scheduledDates && item.scheduledDates.length > 0;
                             return (
                               <tr
                                 key={idx}
                                 className={`transition-colors ${
-                                  hasMods
+                                  hasMods || hasDates
                                     ? 'bg-amber-50/70 hover:bg-amber-100/60 border-l-4 border-l-amber-400'
                                     : 'hover:bg-corporate-50/50'
                                 }`}
@@ -653,6 +706,18 @@ export function OrdersPage() {
                                           className="inline-block bg-amber-50 text-amber-700 text-[11px] px-2 py-0.5 rounded-md border border-amber-200/60 italic"
                                         >
                                           ✎ {mod}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  )}
+                                  {hasDates && (
+                                    <div className="mt-1.5 flex flex-wrap gap-1">
+                                      {item.scheduledDates!.map((date, di) => (
+                                        <span
+                                          key={di}
+                                          className="inline-block bg-blue-50 text-blue-700 text-[11px] px-2 py-0.5 rounded-md border border-blue-200/60 font-medium"
+                                        >
+                                          📅 {date}
                                         </span>
                                       ))}
                                     </div>
@@ -685,11 +750,12 @@ export function OrdersPage() {
                     <div className="sm:hidden divide-y divide-corporate-100">
                       {selectedOrder.items.map((item, idx) => {
                         const hasMods = item.modifications && item.modifications.length > 0;
+                        const hasDates = item.scheduledDates && item.scheduledDates.length > 0;
                         return (
                           <div
                             key={idx}
                             className={`px-4 py-3.5 space-y-2 ${
-                              hasMods ? 'bg-amber-50/70 border-l-4 border-l-amber-400' : ''
+                              hasMods || hasDates ? 'bg-amber-50/70 border-l-4 border-l-amber-400' : ''
                             }`}
                           >
                             <div className="flex items-center justify-between">
@@ -719,6 +785,18 @@ export function OrdersPage() {
                                     className="inline-block bg-amber-50 text-amber-700 text-[11px] px-2 py-0.5 rounded-md border border-amber-200/60 italic"
                                   >
                                     ✎ {mod}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                            {hasDates && (
+                              <div className="flex flex-wrap gap-1 mt-1">
+                                {item.scheduledDates!.map((date, di) => (
+                                  <span
+                                    key={di}
+                                    className="inline-block bg-blue-50 text-blue-700 text-[11px] px-2 py-0.5 rounded-md border border-blue-200/60 font-medium"
+                                  >
+                                    📅 {date}
                                   </span>
                                 ))}
                               </div>
