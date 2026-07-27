@@ -5,7 +5,6 @@ import { useAuthStore } from '../store/authStore';
 import { Settings, Shield, Zap, CreditCard, Save, Clock, HelpCircle, Plus, Trash2, MessageCircle, ExternalLink, Loader2 } from 'lucide-react';
 import { useToastStore } from '../store/toastStore';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
-import { WhatsAppConnection } from '../components/whatsapp/WhatsAppConnection';
 
 interface FaqItem {
   question: string;
@@ -200,15 +199,9 @@ export function SettingsPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
-        {/* Left Column: WhatsApp Connection */}
-        <div className="lg:col-span-1 space-y-8">
-          {user?.tenantId && <WhatsAppConnection tenantId={user.tenantId!} />}
-        </div>
-
+      <div className="space-y-8">
         {/* Right Column: IA & Store Config */}
-        <div className="lg:col-span-2 space-y-8">
+        <div className="space-y-8">
           <div className="bg-white rounded-2xl shadow-sm border border-corporate-100 overflow-hidden">
             <div className="p-5 border-b border-corporate-50 bg-corporate-50/50 flex justify-between items-center">
               <div className="flex items-center gap-3">

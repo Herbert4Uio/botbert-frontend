@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../services/api';
-import { MessageSquare, Bot, User, PauseCircle, PlayCircle, Loader2 } from 'lucide-react';
+import { MessageSquare, Bot, User, PauseCircle, PlayCircle, Loader2, Trash2 } from 'lucide-react';
 import { cn } from '../utils/cn';
 
 interface Message {
@@ -58,15 +58,35 @@ export function ChatsPage() {
     }
   };
 
+  const clearHistory = async () => {
+    if (!window.confirm('¿Estás seguro de borrar toda la memoria de la IA? Se perderá el contexto de todos los chats actuales.')) return;
+    try {
+      await api.delete('/sales/history');
+      setConversations([]);
+      setSelectedChat(null);
+      alert('Memoria borrada exitosamente.');
+    } catch (error) {
+      console.error(error);
+      alert('Error al borrar la memoria');
+    }
+  };
+
   return (
     <div className="h-[calc(100vh-80px)] flex gap-4 max-w-7xl mx-auto pb-4">
       
       {/* Sidebar: Lista de Chats */}
       <div className="w-1/3 bg-white rounded-xl shadow-sm border border-corporate-100 flex flex-col overflow-hidden">
-        <div className="p-4 border-b border-corporate-100 bg-corporate-50">
+        <div className="p-4 border-b border-corporate-100 bg-corporate-50 flex justify-between items-center">
           <h2 className="font-bold text-corporate-900 flex items-center gap-2">
             <MessageSquare className="w-5 h-5" /> Bandeja de Entrada
           </h2>
+          <button 
+            onClick={clearHistory}
+            className="p-2 text-red-500 hover:bg-red-100 rounded-lg transition-colors tooltip-wrapper"
+            title="Borrar memoria de toda la IA"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
         </div>
         
         <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-1">
