@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api } from '../services/api';
-import { MessageSquare, Bot, User, PauseCircle, PlayCircle, Loader2, Trash2 } from 'lucide-react';
+import { MessageSquare, Bot, User, PauseCircle, PlayCircle, Loader2, Trash2, Send, RefreshCw, PlusCircle } from 'lucide-react';
 import { cn } from '../utils/cn';
 
 interface Message {
@@ -23,6 +23,10 @@ export function ChatsPage() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedChat, setSelectedChat] = useState<Conversation | null>(null);
+  const [messageInput, setMessageInput] = useState('');
+  const [isSending, setIsSending] = useState(false);
+  const [isForcingAi, setIsForcingAi] = useState(false);
+  const [isInjectMode, setIsInjectMode] = useState(false);
 
   useEffect(() => {
     fetchConversations();
@@ -68,6 +72,52 @@ export function ChatsPage() {
     } catch (error) {
       console.error(error);
       alert('Error al borrar la memoria');
+    }
+  };
+
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedChat || !messageInput.trim()) return;
+
+    const currentMsg = messageInput.trim();
+    setMessageInput('');
+    setIsSending(true);
+
+    try {
+      const endpoint = isInjectMode 
+        ? `/sales/conversations/${selectedChat._id}/inject` 
+        : `/sales/conversations/${selectedChat._id}/message`;
+        
+      const { data } = await api.post(endpoint, {
+        message: currentMsg
+      });
+      setSelectedChat(data);
+      fetchConversations();
+      
+      if (isInjectMode) {
+        setIsInjectMode(false); // Volver al modo normal después de inyectar
+      }
+    } catch (error) {
+      console.error(error);
+      alert('Error enviando mensaje');
+      setMessageInput(currentMsg); // Restaurar si falla
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  const handleForceAiReply = async () => {
+    if (!selectedChat) return;
+    setIsForcingAi(true);
+    try {
+      const { data } = await api.post(`/sales/conversations/${selectedChat._id}/force-reply`);
+      setSelectedChat(data);
+      fetchConversations();
+    } catch (error) {
+      console.error(error);
+      alert('Error forzando respuesta de IA');
+    } finally {
+      setIsForcingAi(false);
     }
   };
 
@@ -156,21 +206,32 @@ export function ChatsPage() {
                 </p>
               </div>
               
-              <button 
-                onClick={togglePause}
-                className={cn(
-                  "px-4 py-2 rounded-lg font-bold text-sm transition-colors flex items-center gap-2",
-                  selectedChat.isAiPaused 
-                    ? "bg-green-100 text-green-700 hover:bg-green-200" 
-                    : "bg-red-100 text-red-700 hover:bg-red-200"
-                )}
-              >
-                {selectedChat.isAiPaused ? (
-                  <><PlayCircle className="w-4 h-4" /> Reactivar IA</>
-                ) : (
-                  <><PauseCircle className="w-4 h-4" /> Pausar IA</>
-                )}
-              </button>
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={handleForceAiReply}
+                  disabled={isForcingAi}
+                  className="px-4 py-2 rounded-lg font-bold text-sm bg-purple-100 text-purple-700 hover:bg-purple-200 transition-colors flex items-center gap-2 disabled:opacity-50"
+                  title="Obligar a la IA a leer el historial y responder ahora"
+                >
+                  {isForcingAi ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                  Forzar IA
+                </button>
+                <button 
+                  onClick={togglePause}
+                  className={cn(
+                    "px-4 py-2 rounded-lg font-bold text-sm transition-colors flex items-center gap-2",
+                    selectedChat.isAiPaused 
+                      ? "bg-green-100 text-green-700 hover:bg-green-200" 
+                      : "bg-red-100 text-red-700 hover:bg-red-200"
+                  )}
+                >
+                  {selectedChat.isAiPaused ? (
+                    <><PlayCircle className="w-4 h-4" /> Reactivar IA</>
+                  ) : (
+                    <><PauseCircle className="w-4 h-4" /> Pausar IA</>
+                  )}
+                </button>
+              </div>
             </div>
 
             {/* Aviso de Pausa */}
@@ -200,6 +261,55 @@ export function ChatsPage() {
                   </div>
                 );
               })}
+            </div>
+
+            {/* Input Manual */}
+            <div className="p-4 bg-white border-t border-corporate-100 flex flex-col gap-2">
+              <div className="flex items-center gap-4 px-1">
+                <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-corporate-600 hover:text-corporate-900">
+                  <input 
+                    type="checkbox" 
+                    checked={!isInjectMode} 
+                    onChange={() => setIsInjectMode(false)}
+                    className="accent-accent"
+                  />
+                  Responder (Envía WS)
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-purple-600 hover:text-purple-800" title="Añade texto como si lo hubiera dicho el cliente, SIN enviar WhatsApp">
+                  <input 
+                    type="checkbox" 
+                    checked={isInjectMode} 
+                    onChange={() => setIsInjectMode(true)}
+                    className="accent-purple-600"
+                  />
+                  Inyectar contexto del Cliente
+                </label>
+              </div>
+              <form onSubmit={handleSendMessage} className="flex gap-2">
+                <input
+                  type="text"
+                  value={messageInput}
+                  onChange={(e) => setMessageInput(e.target.value)}
+                  placeholder={isInjectMode ? "Escribe lo que el cliente dijo..." : "Escribe un mensaje manual al cliente..."}
+                  className={cn(
+                    "flex-1 border rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 transition-all",
+                    isInjectMode 
+                      ? "bg-purple-50 border-purple-200 focus:ring-purple-500 focus:bg-white placeholder:text-purple-300 text-purple-900"
+                      : "bg-corporate-50 border-corporate-200 focus:ring-accent focus:bg-white"
+                  )}
+                  disabled={isSending}
+                />
+                <button
+                  type="submit"
+                  disabled={isSending || !messageInput.trim()}
+                  className={cn(
+                    "text-white px-4 py-2 rounded-lg font-bold flex items-center justify-center disabled:opacity-50 transition-colors shadow-sm",
+                    isInjectMode ? "bg-purple-600 hover:bg-purple-700" : "bg-accent hover:bg-accent/90"
+                  )}
+                >
+                  {isSending ? <Loader2 className="w-4 h-4 animate-spin" /> : (isInjectMode ? <PlusCircle className="w-4 h-4" /> : <Send className="w-4 h-4" />)}
+                </button>
+              </form>
             </div>
           </>
         ) : (

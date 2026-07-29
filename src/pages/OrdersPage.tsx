@@ -3,6 +3,7 @@ import { api } from '../services/api';
 import { ShoppingBag, Loader2, X, MapPin, Calendar, CreditCard, User, CheckCircle2, Truck, PackageCheck, Clock, XCircle, LayoutGrid, List, Search, MessageSquare, Phone, Hash, AlertTriangle } from 'lucide-react';
 import { useToastStore } from '../store/toastStore';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
+import { OrderFormModal } from '../components/orders/OrderFormModal';
 
 interface OrderItem {
   productId: string;
@@ -99,6 +100,9 @@ export function OrdersPage() {
   const [deliveryFilter, setDeliveryFilter] = useState('ALL');
   const [dateFilter, setDateFilter] = useState('ALL');
 
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [orderToEdit, setOrderToEdit] = useState<Order | null>(null);
+
   const { addToast } = useToastStore();
   const [modalConfig, setModalConfig] = useState<{
     isOpen: boolean;
@@ -169,6 +173,37 @@ export function OrdersPage() {
         }
       }
     );
+  };
+
+  const handleDeleteOrder = (orderId: string) => {
+    confirmAction(
+      'Eliminar Orden',
+      '¿Estás seguro de que deseas eliminar esta orden? Esta acción no se puede deshacer.',
+      async () => {
+        try {
+          await api.delete(`/orders/${orderId}`);
+          fetchOrders();
+          setSelectedOrder(null);
+          addToast('Orden eliminada exitosamente', 'success');
+          setModalConfig((prev) => ({ ...prev, isOpen: false }));
+        } catch (error) {
+          console.error(error);
+          addToast('Error eliminando la orden', 'error');
+        }
+      },
+      true
+    );
+  };
+
+  const handleEditOrder = () => {
+    setOrderToEdit(selectedOrder);
+    setIsFormOpen(true);
+    setSelectedOrder(null); // Close details modal
+  };
+
+  const handleCreateOrder = () => {
+    setOrderToEdit(null);
+    setIsFormOpen(true);
   };
 
   const getCustomerName = (customer: Customer | string) => {
@@ -243,6 +278,13 @@ export function OrdersPage() {
               <LayoutGrid className="w-4 h-4" /> Tablero
             </button>
           </div>
+          
+          <button 
+            onClick={handleCreateOrder}
+            className="bg-accent text-white px-4 py-2 rounded-lg font-bold flex items-center gap-2 hover:bg-accent/90 transition-colors shadow-sm"
+          >
+            <ShoppingBag className="w-4 h-4" /> Nueva Orden
+          </button>
         </div>
 
         {/* Filtros */}
@@ -477,12 +519,27 @@ export function OrdersPage() {
                   a las {new Date(selectedOrder.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </p>
               </div>
-              <button
-                onClick={() => setSelectedOrder(null)}
-                className="p-2 text-corporate-400 hover:text-corporate-900 bg-corporate-50 hover:bg-corporate-100 rounded-full transition-colors shrink-0"
-              >
-                <X className="w-5 h-5" />
-              </button>
+              
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleEditOrder}
+                  className="px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 font-bold text-xs rounded-lg transition-colors border border-blue-200"
+                >
+                  Editar
+                </button>
+                <button
+                  onClick={() => handleDeleteOrder(selectedOrder._id)}
+                  className="px-3 py-1.5 bg-red-50 text-red-700 hover:bg-red-100 font-bold text-xs rounded-lg transition-colors border border-red-200"
+                >
+                  Eliminar
+                </button>
+                <button
+                  onClick={() => setSelectedOrder(null)}
+                  className="p-2 ml-2 text-corporate-400 hover:text-corporate-900 bg-corporate-50 hover:bg-corporate-100 rounded-full transition-colors shrink-0"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </div>
 
             {/* ── Body ── */}
@@ -860,6 +917,13 @@ export function OrdersPage() {
         onConfirm={modalConfig.onConfirm}
         onCancel={() => setModalConfig((prev) => ({ ...prev, isOpen: false }))}
         isDestructive={modalConfig.isDestructive}
+      />
+
+      <OrderFormModal
+        isOpen={isFormOpen}
+        onClose={() => setIsFormOpen(false)}
+        onSuccess={fetchOrders}
+        orderToEdit={orderToEdit}
       />
     </div>
   );
