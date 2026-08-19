@@ -1,6 +1,6 @@
 import { Outlet } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
-import { LogOut, LayoutDashboard, ShoppingBag, Package, Settings, Layers, MapPin, Building2, MessageSquare, Sparkles } from 'lucide-react';
+import { LogOut, LayoutDashboard, ShoppingBag, Package, Settings, Layers, MapPin, Building2, MessageSquare, Sparkles, BarChart2, Users, Kanban, Tags } from 'lucide-react';
 import { cn } from '../utils/cn';
 import { ToastContainer } from '../components/ui/ToastContainer';
 
@@ -55,7 +55,42 @@ export function DashboardLayout() {
                 </div>
               </div>
 
-              {/* Grupo 2: Inventario & Productos */}
+              {/* Grupo 2: CRM & Contactos */}
+              <div>
+                <p className="px-4 text-[10px] font-bold tracking-widest text-[#475569] uppercase mb-2">CRM & Contactos</p>
+                <div className="space-y-1">
+                  <a href="/crm/dashboard" className={cn(
+                    "flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all text-sm font-medium",
+                    window.location.pathname === '/crm/dashboard' ? "bg-accent/10 text-accent" : "hover:bg-[#2d333b] hover:text-white"
+                  )}>
+                    <BarChart2 className="w-4 h-4" />
+                    Dashboard
+                  </a>
+                  <a href="/crm/contacts" className={cn(
+                    "flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all text-sm font-medium",
+                    window.location.pathname === '/crm/contacts' ? "bg-accent/10 text-accent" : "hover:bg-[#2d333b] hover:text-white"
+                  )}>
+                    <Users className="w-4 h-4" />
+                    Contactos
+                  </a>
+                  <a href="/crm" className={cn(
+                    "flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all text-sm font-medium",
+                    window.location.pathname === '/crm' ? "bg-accent/10 text-accent" : "hover:bg-[#2d333b] hover:text-white"
+                  )}>
+                    <Kanban className="w-4 h-4" />
+                    Pipelines
+                  </a>
+                  <a href="/crm/tags" className={cn(
+                    "flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all text-sm font-medium",
+                    window.location.pathname === '/crm/tags' ? "bg-accent/10 text-accent" : "hover:bg-[#2d333b] hover:text-white"
+                  )}>
+                    <Tags className="w-4 h-4" />
+                    Etiquetas
+                  </a>
+                </div>
+              </div>
+
+              {/* Grupo 3: Inventario & Productos */}
               <div>
                 <p className="px-4 text-[10px] font-bold tracking-widest text-[#475569] uppercase mb-2">Inventario & Productos</p>
                 <div className="space-y-1">
@@ -106,7 +141,7 @@ export function DashboardLayout() {
                       </a>
                       <a href="/settings" className={cn(
                         "flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all text-sm font-medium",
-                        window.location.pathname.includes('/settings') && !window.location.pathname.includes('/prompt-generator') ? "bg-accent/10 text-accent" : "hover:bg-[#2d333b] hover:text-white"
+                        window.location.pathname === '/settings' ? "bg-accent/10 text-accent" : "hover:bg-[#2d333b] hover:text-white"
                       )}>
                         <Settings className="w-4 h-4" />
                         Configuración
