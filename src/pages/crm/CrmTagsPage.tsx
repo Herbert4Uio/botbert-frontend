@@ -35,7 +35,7 @@ export function CrmTagsPage() {
 
         {/* Tags Config */}
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <h2 className="text-lg font-semibold mb-4">Etiquetas (Tags)</h2>
+          <h2 className="text-lg font-semibold mb-4">Etiquetas</h2>
           <div className="flex gap-2 mb-4">
             <input 
               type="color" 
