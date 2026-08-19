@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import { Plus, Settings, X, Edit2, Trash2 } from 'lucide-react';
+import { Plus, Settings, X, Trash2 } from 'lucide-react';
 import { crmService } from '../../services/crm.service';
 
 export function CrmBoardPage() {
