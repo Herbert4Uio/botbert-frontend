@@ -104,6 +104,18 @@ export function CrmBoardPage() {
     }
   };
 
+  const deleteDeal = async () => {
+    if (!dealForm._id) return;
+    if (!window.confirm('¿Estás seguro de eliminar este Deal?')) return;
+    try {
+      await crmService.deleteDeal(dealForm._id);
+      setIsDealModalOpen(false);
+      loadDeals(pipeline._id);
+    } catch (error) {
+      console.error('Error deleting deal', error);
+    }
+  };
+
   const savePipelineSettings = async () => {
     try {
       // Reordenar
@@ -302,19 +314,31 @@ export function CrmBoardPage() {
                 </select>
               </div>
             </div>
-            <div className="p-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-3">
-              <button 
-                onClick={() => setIsDealModalOpen(false)}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
-              >
-                Cancelar
-              </button>
-              <button 
-                onClick={saveDeal}
-                className="px-4 py-2 text-sm font-medium text-white bg-corporate-600 rounded-lg hover:bg-corporate-700"
-              >
-                Guardar Deal
-              </button>
+            <div className="p-4 border-t border-gray-100 bg-gray-50 flex justify-between gap-3">
+              <div>
+                {dealForm._id && (
+                  <button 
+                    onClick={deleteDeal}
+                    className="px-4 py-2 text-sm font-medium text-red-600 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors"
+                  >
+                    Eliminar
+                  </button>
+                )}
+              </div>
+              <div className="flex gap-3">
+                <button 
+                  onClick={() => setIsDealModalOpen(false)}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  onClick={saveDeal}
+                  className="px-4 py-2 text-sm font-medium text-white bg-corporate-600 rounded-lg hover:bg-corporate-700"
+                >
+                  Guardar Deal
+                </button>
+              </div>
             </div>
           </div>
         </div>

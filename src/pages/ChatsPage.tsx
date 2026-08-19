@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../services/api';
-import { MessageSquare, Bot, User, PauseCircle, PlayCircle, Loader2, Trash2, Send, RefreshCw, PlusCircle } from 'lucide-react';
+import { crmService } from '../services/crm.service';
+import { MessageSquare, Bot, User, PauseCircle, PlayCircle, Loader2, Trash2, Send, RefreshCw, PlusCircle, Filter } from 'lucide-react';
 import { cn } from '../utils/cn';
 
 interface Message {
@@ -11,7 +12,7 @@ interface Message {
 
 interface Conversation {
   _id: string;
-  customerId: { _id: string; profileName: string; whatsappId: string; phoneNumber?: string; };
+  customerId: { _id: string; profileName: string; whatsappId: string; phoneNumber?: string; tags?: any[] };
   branchId: { _id: string; name: string; };
   messages: Message[];
   status: string;
@@ -21,6 +22,8 @@ interface Conversation {
 
 export function ChatsPage() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [tags, setTags] = useState<any[]>([]);
+  const [selectedTagId, setSelectedTagId] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [selectedChat, setSelectedChat] = useState<Conversation | null>(null);
   const [messageInput, setMessageInput] = useState('');
@@ -29,10 +32,23 @@ export function ChatsPage() {
   const [isInjectMode, setIsInjectMode] = useState(false);
 
   useEffect(() => {
-    fetchConversations();
+    fetchData();
     const interval = setInterval(fetchConversations, 10000); // Polling every 10s
     return () => clearInterval(interval);
   }, []);
+
+  const fetchData = async () => {
+    await Promise.all([fetchConversations(), fetchTags()]);
+  };
+
+  const fetchTags = async () => {
+    try {
+      const data = await crmService.getTags();
+      setTags(data);
+    } catch (error) {
+      console.error('Error fetching tags', error);
+    }
+  };
 
   const fetchConversations = async () => {
     try {
@@ -121,6 +137,10 @@ export function ChatsPage() {
     }
   };
 
+  const filteredConversations = selectedTagId 
+    ? conversations.filter(c => c.customerId?.tags?.some(t => t._id === selectedTagId))
+    : conversations;
+
   return (
     <div className="h-[calc(100vh-80px)] flex gap-4 max-w-7xl mx-auto pb-4">
       
@@ -139,17 +159,35 @@ export function ChatsPage() {
           </button>
         </div>
         
+        {/* Filter Bar */}
+        <div className="px-4 py-2 border-b border-gray-100 bg-white">
+          <div className="flex items-center gap-2 text-sm text-gray-600">
+            <Filter className="w-4 h-4" />
+            <select 
+              value={selectedTagId}
+              onChange={(e) => setSelectedTagId(e.target.value)}
+              className="w-full border-none bg-transparent focus:ring-0 cursor-pointer text-sm"
+            >
+              <option value="">Todas las etiquetas</option>
+              {tags.map(tag => (
+                <option key={tag._id} value={tag._id}>{tag.name}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        
         <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-1">
           {loading && conversations.length === 0 ? (
             <div className="flex justify-center p-8">
               <Loader2 className="w-6 h-6 animate-spin text-accent" />
             </div>
-          ) : conversations.length === 0 ? (
+          ) : filteredConversations.length === 0 ? (
             <div className="text-center p-8 text-corporate-400 text-sm">
-              No hay conversaciones activas
+              {conversations.length === 0 ? 'No hay conversaciones activas' : 'No hay chats con esta etiqueta'}
             </div>
           ) : (
-            conversations.map(chat => (
+            filteredConversations.map(chat => (
               <div 
                 key={chat._id}
                 onClick={() => setSelectedChat(chat)}

@@ -10,6 +10,12 @@ const getAuthHeaders = () => {
 };
 
 export const crmService = {
+  // Dashboard
+  getDashboardStats: async () => {
+    const res = await axios.get(`${API_URL}/crm/dashboard`, getAuthHeaders());
+    return res.data;
+  },
+
   // Tags
   getTags: async () => {
     const res = await axios.get(`${API_URL}/crm/tags`, getAuthHeaders());
