@@ -220,7 +220,7 @@ export function CatalogPage() {
         const cId = typeof pr.cityId === 'object' ? pr.cityId._id : pr.cityId;
         return cId === selectedCityId;
       });
-      return priceObj ? `$${priceObj.price.toFixed(2)}` : 'N/A';
+      return priceObj ? `Bs. ${priceObj.price.toFixed(2)}` : 'N/A';
     }
     if (prod.prices && prod.prices.length > 0) {
       return `${prod.prices.length} Ciudad(es)`;

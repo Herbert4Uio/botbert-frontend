@@ -378,7 +378,7 @@ export function OrdersPage() {
                             </div>
                           </td>
                           <td className="px-6 py-4">
-                            <span className="font-bold text-corporate-900">${order.totalAmount.toFixed(2)}</span>
+                            <span className="font-bold text-corporate-900">Bs. {order.totalAmount.toFixed(2)}</span>
                           </td>
                           <td className="px-6 py-4">
                             <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${order.deliveryType === 'PICKUP' ? 'bg-orange-100 text-orange-700' : 'bg-indigo-100 text-indigo-700'}`}>
@@ -449,7 +449,7 @@ export function OrdersPage() {
                           
                           <div className="flex justify-between items-center pt-3 border-t border-corporate-50">
                             <div className="flex flex-col">
-                              <span className="font-bold text-accent text-sm">${order.totalAmount.toFixed(2)}</span>
+                              <span className="font-bold text-accent text-sm">Bs. {order.totalAmount.toFixed(2)}</span>
                               <span className={`text-[9px] font-bold mt-1 ${order.isPaid ? 'text-green-600' : 'text-red-600'}`}>
                                 {order.isPaid ? 'PAGADO' : 'NO PAGADO'}
                               </span>
@@ -821,7 +821,7 @@ export function OrdersPage() {
                                   </span>
                                 </td>
                                 <td className="px-4 py-3.5 text-right font-semibold text-corporate-900">
-                                  ${(item.quantity * item.price).toFixed(2)}
+                                  Bs. {(item.quantity * item.price).toFixed(2)}
                                 </td>
                               </tr>
                             );
@@ -832,7 +832,7 @@ export function OrdersPage() {
                             <td colSpan={2} className="px-4 py-4 text-right text-[11px] font-bold uppercase tracking-wider text-corporate-300">
                               Total de la orden
                             </td>
-                            <td className="px-4 py-4 text-right text-lg font-bold text-accent">${selectedOrder.totalAmount.toFixed(2)}</td>
+                            <td className="px-4 py-4 text-right text-lg font-bold text-accent">Bs. {selectedOrder.totalAmount.toFixed(2)}</td>
                           </tr>
                         </tfoot>
                       </table>
@@ -861,7 +861,7 @@ export function OrdersPage() {
                                 )}
                               </div>
                               <span className="font-bold text-corporate-900 text-sm shrink-0 ml-2">
-                                ${(item.quantity * item.price).toFixed(2)}
+                                Bs. {(item.quantity * item.price).toFixed(2)}
                               </span>
                             </div>
                             <div className="flex items-center gap-2 text-xs text-corporate-400">
@@ -899,7 +899,7 @@ export function OrdersPage() {
                       {/* Total mobile */}
                       <div className="bg-corporate-900 px-4 py-4 flex items-center justify-between">
                         <span className="text-xs font-bold uppercase tracking-wider text-corporate-300">Total</span>
-                        <span className="text-lg font-bold text-accent">${selectedOrder.totalAmount.toFixed(2)}</span>
+                        <span className="text-lg font-bold text-accent">Bs. {selectedOrder.totalAmount.toFixed(2)}</span>
                       </div>
                     </div>
                   </div>
