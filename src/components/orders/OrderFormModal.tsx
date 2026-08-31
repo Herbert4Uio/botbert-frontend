@@ -424,7 +424,7 @@ export function OrderFormModal({ isOpen, onClose, onSuccess, orderToEdit }: Orde
                     title="Cantidad"
                   />
                   <div className="w-24 font-bold text-corporate-900 text-right">
-                    ${(item.price * item.quantity).toFixed(2)}
+                    Bs. {(item.price * item.quantity).toFixed(2)}
                   </div>
                   <button type="button" onClick={() => removeItem(idx)} className="p-1.5 text-red-500 hover:bg-red-100 rounded-md">
                     <Trash2 className="w-4 h-4" />
@@ -438,7 +438,7 @@ export function OrderFormModal({ isOpen, onClose, onSuccess, orderToEdit }: Orde
 
             <div className="border-t pt-4 flex justify-between items-center text-lg">
               <span className="font-bold text-corporate-600">Total Calculado:</span>
-              <span className="font-bold text-accent text-2xl">${calculateTotal().toFixed(2)}</span>
+              <span className="font-bold text-accent text-2xl">Bs. {calculateTotal().toFixed(2)}</span>
             </div>
           </div>
 
